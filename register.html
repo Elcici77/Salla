@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل</title>
+    <link rel="stylesheet" href="Styles/register.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script> <!-- Add intlTelInput script -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css"> <!-- Add intlTelInput styles -->
+</head>
+<body>
+    <!-- Logo at the top-right -->
+    <div class="logo">🔷 شعارك هنا</div>
+
+    <!-- Left side with background image -->
+    <div class="left-side">
+        <img src="images/login.jpg" alt="صورة توضيحية">
+    </div>
+
+    <!-- Right side with register form -->
+    <div class="right-side">
+        <div class="switch-buttons">
+            <!-- Changed to direct to separate pages -->
+            <button onclick="window.location.href='login.html'">تسجيل الدخول</button>
+            <button class="active">تسجيل</button> <!-- Active Register button -->
+        </div>
+
+        <form class="register-form">
+            <div class="input-group">
+                <input type="text" id="organization" required>
+                <label for="organization">اسم المنظمة / الشركة</label>
+            </div>
+
+            <div class="input-group">
+                <input type="email" id="email" required>
+                <label for="email">البريد الإلكتروني</label>
+            </div>
+
+            <!-- Phone input group -->
+            <div class="input-group phone-input">
+                <input type="tel" id="phone" required>
+                <label for="phone">رقم الجوال</label> <!-- Added label for animation -->
+            </div>
+
+            <div class="input-group">
+                <div class="password-container">
+                    <input type="password" id="password" required>
+                    <label for="password">كلمة المرور</label>
+                    <span class="show-password" onclick="togglePasswordVisibility()">👁️</span> <!-- Icon to toggle password visibility -->
+                </div>
+            </div>
+
+            <button type="submit">تسجيل</button>
+        </form>
+    </div>
+
+    <script>
+        // Initialize the phone number input with country selection and search functionality
+        var input = document.querySelector("#phone");
+        var iti = window.intlTelInput(input, {
+            separateDialCode: true,
+            initialCountry: "sa", // Saudi Arabia as default
+            geoIpLookup: function(callback) {
+                fetch("https://ipinfo.io", {cache: "reload"}).then(response => response.json()).then(data => callback(data.country));
+            },
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js", // For search functionality
+        });
+
+        // Toggle password visibility
+        function togglePasswordVisibility() {
+            var passwordField = document.getElementById("password");
+            var icon = document.querySelector(".show-password");
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                icon.textContent = "🙈"; // Change icon to "hide"
+            } else {
+                passwordField.type = "password";
+                icon.textContent = "👁️"; // Change icon to "show"
+            }
+        }
+
+        // Function to check if the label overlaps the input field
+        function checkLabelOverlap() {
+            // Get the phone input field and label
+            var inputField = document.querySelector('.phone-input input');
+            var label = document.querySelector('.phone-input label');
+
+            // Get the bounding client rect of both the input and label
+            var inputRect = inputField.getBoundingClientRect();
+            var labelRect = label.getBoundingClientRect();
+
+            // Check if the label overlaps the input field
+            var isOverlapping = !(labelRect.bottom < inputRect.top || 
+                                labelRect.top > inputRect.bottom || 
+                                labelRect.right < inputRect.left || 
+                                labelRect.left > inputRect.right);
+
+            // If overlap occurs, hide the label
+            if (isOverlapping) {
+                label.style.display = 'none';  // Hide the label
+            } else {
+                label.style.display = 'block';  // Ensure the label is visible when not overlapping
+            }
+        }
+
+        // Run the check when the page loads
+        window.addEventListener('load', checkLabelOverlap);
+
+        // Trigger the check when the input gains focus or is changed
+        document.querySelector('.phone-input input').addEventListener('focus', checkLabelOverlap);
+        document.querySelector('.phone-input input').addEventListener('input', checkLabelOverlap);
+
+    </script>
+</body>
+</html>
