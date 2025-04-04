@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل حساب جديد</title>
+    <link rel="stylesheet" href="Styles/register.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css">
+</head>
+<body>
+    <!-- Logo at the top-right -->
+    <div class="logo">🔷 شعارك هنا</div>
+
+    <!-- Left side with background image -->
+    <div class="left-side">
+        <img src="images/login.jpg" alt="صورة توضيحية">
+    </div>
+
+    <!-- Right side with register form -->
+    <div class="right-side">
+        <div class="switch-buttons">
+            <button onclick="window.location.href='login.html'">تسجيل الدخول</button>
+            <button class="active">تسجيل</button>
+        </div>
+
+        <form id="registerForm" class="register-form">
+            <div class="input-group">
+                <input type="text" id="organization" required>
+                <label for="organization">اسم المنظمة / الشركة</label>
+            </div>
+
+            <div class="input-group">
+                <input type="email" id="email" required>
+                <label for="email">البريد الإلكتروني</label>
+            </div>
+
+            <div class="input-group phone-input">
+                <input type="tel" id="phone" required>
+                <label for="phone">رقم الجوال</label>
+            </div>
+
+            <div class="input-group">
+                <div class="password-container">
+                    <input type="password" id="password" required minlength="6">
+                    <label for="password">كلمة المرور (6 أحرف على الأقل)</label>
+                    <span class="show-password" onclick="togglePasswordVisibility()">👁️</span>
+                </div>
+            </div>
+
+            <button type="submit" id="registerButton">تسجيل</button>
+        </form>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p> ...جاري إنشاء الحساب</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize phone number input
+        const phoneInput = document.querySelector("#phone");
+        const iti = window.intlTelInput(phoneInput, {
+            separateDialCode: true,
+            initialCountry: "sa",
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+        });
+
+        // Toggle password visibility
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById("password");
+            const icon = document.querySelector(".show-password");
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                icon.textContent = "🙈";
+            } else {
+                passwordField.type = "password";
+                icon.textContent = "👁️";
+            }
+        }
+
+        // Handle form submission
+        document.getElementById("registerForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            
+            const registerButton = document.getElementById("registerButton");
+            const loading = document.getElementById("loading");
+            
+            // Show loading state
+            registerButton.style.display = "none";
+            loading.style.display = "block";
+
+            // Get form values
+            const username = document.getElementById("organization").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const phone = iti.getNumber();
+
+            // Basic validation
+            if (!username || !email || !password || !phone) {
+                alert("يرجى ملء جميع الحقول المطلوبة");
+                registerButton.style.display = "block";
+                loading.style.display = "none";
+                return;
+            }
+
+            // Email validation
+            if (!validateEmail(email)) {
+                alert("البريد الإلكتروني غير صالح");
+                registerButton.style.display = "block";
+                loading.style.display = "none";
+                return;
+            }
+
+            // Password length validation
+            if (password.length < 6) {
+                alert("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+                registerButton.style.display = "block";
+                loading.style.display = "none";
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:5000/api/auth/register", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json" 
+                    },
+                    body: JSON.stringify({ 
+                        username, 
+                        email, 
+                        password, 
+                        phone 
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || "حدث خطأ أثناء التسجيل");
+                }
+
+                // Store email for verification page
+                localStorage.setItem('userEmail', email);
+                
+                // Redirect to verification page
+                window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
+                
+            } catch (error) {
+                console.error("Registration error:", error);
+                alert(error.message || "حدث خطأ، يرجى المحاولة مرة أخرى");
+                registerButton.style.display = "block";
+                loading.style.display = "none";
+            }
+        });
+
+        // Simple email validation
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // Adjust label position for phone input
+        function adjustPhoneLabel() {
+            const phoneField = document.querySelector('.phone-input input');
+            const label = document.querySelector('.phone-input label');
+            
+            if (phoneField.value) {
+                label.style.display = 'none';
+            } else {
+                label.style.display = 'block';
+            }
+        }
+
+        // Event listeners for phone input
+        phoneInput.addEventListener('input', adjustPhoneLabel);
+        phoneInput.addEventListener('focus', adjustPhoneLabel);
+        phoneInput.addEventListener('blur', adjustPhoneLabel);
+        
+        // Initial adjustment
+        adjustPhoneLabel();
+    </script>
+</body>
+</html>
