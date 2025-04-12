@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="Styles/dashboard.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <button class="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <div class="logo">شعار الموقع</div>
+        
+        <button class="connect-store-btn">
+            <i class="fas fa-link"></i> ربط متجر سلة
+        </button>
+        
+        <div class="user-profile">
+            <div class="user-avatar">
+                <img src="https://via.placeholder.com/40" alt="صورة المستخدم">
+            </div>
+            <span id="username-display">جار التحميل...</span>
+            
+            <div class="dropdown-menu">
+                <a href="#"><i class="fas fa-user"></i> الملف الشخصي</a>
+                <a href="#"><i class="fas fa-credit-card"></i> طرق الدفع</a>
+                <a href="#"><i class="fas fa-box-open"></i> الباقات</a>
+                <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="fas fa-envelope"></i>
+            <span>الرسائل</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="fas fa-users"></i>
+            <span>العملاء</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="fas fa-chart-line"></i>
+            <span>الإحصائيات</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="fas fa-cog"></i>
+            <span>الإعدادات</span>
+        </div>
+    </aside>
+    
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay"></div>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="welcome-card">
+            <h1>مرحبًا بك في لوحة التحكم</h1>
+            <p>لقد سجلت الدخول بنجاح!</p>
+            <p>يمكنك الآن ربط متجر سلة الخاص بك للبدء في إرسال الرسائل التلقائية للعملاء.</p>
+        </div>
+    </main>
+    
+    <script>
+        // تسجيل الخروج
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            window.location.href = 'login.html';
+        }
+        
+        // إدارة القائمة الجانبية
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.querySelector('.menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            // فتح/إغلاق القائمة
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('active');
+            });
+            
+            // إغلاق القائمة عند النقر خارجها
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+            });
+            
+            // جلب بيانات المستخدم
+            loadUserData();
+        });
+        
+        // جلب بيانات المستخدم
+        async function loadUserData() {
+        const usernameDisplay = document.getElementById('username-display');
+        
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // إظهار حالة التحميل
+            usernameDisplay.textContent = 'جار التحميل...';
+            
+            const response = await fetch('/api/auth/user-info', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            
+            console.log('User Info Response:', data); // سجل استجابة الخادم
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'فشل في جلب البيانات');
+            }
+
+            if (data.success && data.user && data.user.username) {
+                usernameDisplay.textContent = data.user.username;
+                
+                // تخزين بيانات المستخدم للاستخدام لاحقاً
+                localStorage.setItem('userData', JSON.stringify(data.user));
+            } else {
+                throw new Error('بيانات المستخدم غير متوفرة');
+            }
+
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            
+            // المحاولة باستخدام البيانات المحفوظة إن وجدت
+            const savedData = localStorage.getItem('userData');
+            if (savedData) {
+                const userData = JSON.parse(savedData);
+                usernameDisplay.textContent = userData.username || 'ضيف';
+            } else {
+                usernameDisplay.textContent = 'ضيف';
+            }
+            
+            // إظهار رسالة الخطأ
+            showError(error.message || 'حدث خطأ في جلب بيانات المستخدم');
+        }
+    }
+
+    // استدعاء الدالة عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', loadUserData);
+        
+        // عرض رسائل الخطأ
+        function showError(message) {
+            const errorElement = document.createElement('div');
+            errorElement.className = 'error-message';
+            errorElement.textContent = message;
+            document.body.appendChild(errorElement);
+            
+            setTimeout(() => {
+                errorElement.remove();
+            }, 3000);
+        }
+
+        
+        async function connectStore() {
+        const response = await fetch('/api/salla/connect', {
+            method: 'POST',
+            headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const data = await response.json();
+        window.location.href = data.auth_url; // توجيه إلى صفحة مصادقة سلة
+        }
+    </script>
+</body>
+</html>

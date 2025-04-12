@@ -151,6 +151,7 @@ verifyForm.addEventListener('submit', async (e) => {
         try {
             resendLink.style.display = 'none';
             resendTimer.style.display = 'block';
+            startResendTimer(); // بدء المؤقت فورًا
             
             const response = await fetch('http://localhost:5000/api/auth/resend-code', {
                 method: 'POST',
@@ -162,15 +163,13 @@ verifyForm.addEventListener('submit', async (e) => {
 
             const data = await response.json();
 
-            if (response.ok) {
-                showSuccess('تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني');
-                startResendTimer();
-            } else {
+            if (!response.ok) {
                 throw new Error(data.message || 'حدث خطأ أثناء إعادة الإرسال');
             }
+
+            showSuccess('تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني');
         } catch (error) {
             showError(error.message);
-        } finally {
             resendLink.style.display = 'inline';
             resendTimer.style.display = 'none';
         }

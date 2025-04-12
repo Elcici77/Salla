@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,41 +7,156 @@
     <link rel="stylesheet" href="Styles/LoginStyles.css">
 </head>
 <body>
-        <!-- Logo at the top-right -->
-        <div class="logo">🔷 شعارك هنا</div>
+    <!-- Logo at the top-right -->
+    <div class="logo">🔷 شعارك هنا</div>
 
+    <!-- Left side with background image -->
+    <div class="left-side">
+        <img src="images/login.jpg" alt="صورة توضيحية">
+    </div>
 
-        <!-- Left side with background image -->
-        <div class="left-side">
-            <img src="images/login.jpg" alt="صورة توضيحية">
+    <!-- Right side with login form -->
+    <div class="right-side">
+        <div class="switch-buttons">
+            <button class="active">تسجيل الدخول</button>
+            <button onclick="location.href='register.html'">إنشاء حساب</button>
         </div>
 
-        <!-- Right side with login form -->
-        <div class="right-side">
-            <div class="switch-buttons">
-                <button class="active">تسجيل الدخول</button>
-                <button onclick="location.href='register.html'">إنشاء حساب</button>
+        <form id="loginForm" class="login-form">
+            <div id="errorMsg" class="error-message" style="display: none;"></div>
+            
+            <div class="input-group">
+                <input type="email" id="email" required>
+                <label for="email">البريد الإلكتروني</label>
             </div>
 
-            <form class="login-form">
-                <div class="input-group">
-                    <input type="email" id="email" required>
-                    <label for="email">البريد الإلكتروني</label>
-                </div>
-
-                <div class="input-group">
+            <div class="input-group">
+                <div class="password-container">
                     <input type="password" id="password" required>
                     <label for="password">كلمة المرور</label>
+                    <span class="show-password" onclick="togglePasswordVisibility()">👁️</span>
                 </div>
+            </div>
 
-                <div class="options">
-                    <label><input type="checkbox"> تذكرني</label>
-                    <a href="forgot-password.html">نسيت كلمة المرور؟</a>
-                </div>
+            <div class="options">
+                <label><input type="checkbox" id="rememberMe"> تذكرني</label>
+                <a href="forgot-password.html">نسيت كلمة المرور؟</a>
+            </div>
 
-                <button type="submit">تسجيل الدخول</button>
-            </form>
-        </div>
-    
+            <button type="submit" id="loginButton">تسجيل الدخول</button>
+            
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>...جاري تسجيل الدخول </p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // عناصر DOM
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('loginButton');
+        const loading = document.getElementById('loading');
+        const errorMsg = document.getElementById('errorMsg');
+        const rememberMe = document.getElementById('rememberMe');
+
+        // تبديل عرض كلمة المرور
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById("password");
+            const icon = document.querySelector(".show-password");
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                icon.textContent = "🙈";
+            } else {
+                passwordField.type = "password";
+                icon.textContent = "👁️";
+            }
+        }
+
+        // عند تحميل الصفحة، تحقق إذا كان هناك بيانات محفوظة
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedEmail = localStorage.getItem('rememberedEmail');
+            const savedPassword = localStorage.getItem('rememberedPassword');
+            
+            if (savedEmail && savedPassword) {
+                emailInput.value = savedEmail;
+                passwordInput.value = savedPassword;
+                rememberMe.checked = true;
+            }
+        });
+
+        // إرسال نموذج تسجيل الدخول
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const remember = rememberMe.checked;
+
+            // التحقق من المدخلات
+            if (!email || !password) {
+                showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+                return;
+            }
+
+            try {
+                // عرض حالة التحميل
+                loginButton.disabled = true;
+                loading.style.display = 'block';
+                errorMsg.style.display = 'none';
+
+                // إرسال طلب تسجيل الدخول
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // إذا كان البريد غير مفعل
+                    if (data.needsVerification) {
+                        localStorage.setItem('userEmail', email);
+                        window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
+                        return;
+                    }
+                    throw new Error(data.message || 'فشل تسجيل الدخول');
+                }
+
+                // إذا تم اختيار "تذكرني"
+                if (remember) {
+                    localStorage.setItem('rememberedEmail', email);
+                    localStorage.setItem('rememberedPassword', password);
+                } else {
+                    localStorage.removeItem('rememberedEmail');
+                    localStorage.removeItem('rememberedPassword');
+                }
+
+                // حفظ التوكن
+                localStorage.setItem('authToken', data.token);
+
+                // توجيه المستخدم إلى الصفحة الرئيسية
+                window.location.href = 'dashboard.html';
+
+            } catch (error) {
+                showError(error.message || 'حدث خطأ أثناء تسجيل الدخول');
+                console.error('Login error:', error);
+            } finally {
+                loginButton.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        // عرض رسالة الخطأ
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+        }
+    </script>
 </body>
 </html>

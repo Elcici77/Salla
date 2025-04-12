@@ -1,21 +1,30 @@
 const mysql = require('mysql2');
 
-// إنشاء الاتصال بقاعدة البيانات
+// إنشاء الاتصال الأساسي
 const db = mysql.createConnection({
-    host: 'localhost', // العنوان (إذا كنت تستخدم سيرفر خارجي، ضعه هنا)
-    user: 'root',      // اسم المستخدم الخاص بك
-    password: '5729053996mM',      // كلمة المرور الخاصة بك 
-    database: 'salla' // اسم قاعدة البيانات التي أنشأناها
+  host: 'localhost',
+  user: 'root',
+  password: '5729053996mM',
+  database: 'salla'
 });
+
+// إنشاء نسخة تدعم Promises
+const promiseDb = db.promise();
 
 // التحقق من الاتصال
 db.connect((err) => {
-    if (err) {
-        console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
-    } else {
-        console.log('✅ تم الاتصال بقاعدة البيانات بنجاح!');
-    }
+  if (err) {
+    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
+  } else {
+    console.log('✅ تم الاتصال بقاعدة البيانات بنجاح!');
+  }
 });
 
-// تصدير الاتصال لاستخدامه في الملفات الأخرى
-module.exports = db;
+// تصدير كلا النسختين
+module.exports = {
+  // للاستخدام مع async/await (في salla.js)
+  promise: promiseDb,
+  
+  // للاستخدام مع Callbacks (في باقي الملفات)
+  regular: db
+};

@@ -4,10 +4,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const db = require('../db'); // Make sure this is properly configured
+const db = require('../db');
 const router = express.Router();
 
-require('dotenv').config(); // Load environment variables
+require('dotenv').config();
 
 // Middleware setup
 router.use(express.json());
@@ -27,8 +27,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Utility function to send verification email
-// Update the sendVerificationEmail function in auth.js
+// إرسال بريد التحقق
 async function sendVerificationEmail(email, verificationCode) {
     try {
         const mailOptions = {
@@ -36,15 +35,15 @@ async function sendVerificationEmail(email, verificationCode) {
             to: email,
             subject: 'رمز التحقق من حسابك',
             html: `
-                    <div style="font-family: Arial, sans-serif; text-align: center;">
-                        <h2 style="color: #3498db;">تأكيد البريد الإلكتروني</h2>
-                        <p>رمز التحقق الخاص بك هو:</p>
-                        <div style="font-size: 24px; font-weight: bold; margin: 20px 0; padding: 10px; background: #f4f4f4;">
-                            ${verificationCode}
-                        </div>
-                        <p>هذا الرمز مكون من ${verificationCode.length} أرقام وصالح لمدة 10 دقائق فقط</p>
+                <div style="font-family: Arial, sans-serif; text-align: center;">
+                    <h2 style="color: #3498db;">تأكيد البريد الإلكتروني</h2>
+                    <p>رمز التحقق الخاص بك هو:</p>
+                    <div style="font-size: 24px; font-weight: bold; margin: 20px 0; padding: 10px; background: #f4f4f4;">
+                        ${verificationCode}
                     </div>
-                `
+                    <p>هذا الرمز مكون من 4 أرقام وصالح لمدة 10 دقائق فقط</p>
+                </div>
+            `
         };
 
         const info = await transporter.sendMail(mailOptions);
@@ -56,7 +55,7 @@ async function sendVerificationEmail(email, verificationCode) {
     }
 }
 
-// Database query helper function
+// مساعد استعلام قاعدة البيانات
 function queryDatabase(sql, params) {
     return new Promise((resolve, reject) => {
         db.query(sql, params, (err, result) => {
@@ -70,172 +69,162 @@ function queryDatabase(sql, params) {
     });
 }
 
-// Authentication middleware
+// Middleware المصادقة
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     
     if (!token) return res.sendStatus(401);
 
-    jwt.verify(token, process.env.JWT_SECRET || "default_secret", (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
+    jwt.verify(token, process.env.JWT_SECRET || "default_secret", (err, decoded) => {
+        if (err) {
+            console.error('JWT Verification Error:', err);
+            return res.sendStatus(403);
+        }
+        
+        // إضافة هذا السجل للتأكد من محتوى التوكن
+        console.log('Decoded Token:', decoded);
+        
+        req.user = {
+            userId: decoded.userId, // استخدم نفس المفتاح المستخدم عند إنشاء التوكن
+            username: decoded.username
+        };
         next();
     });
 }
-
-// Routes
-
-/**
- * @route POST /register
- * @desc Register a new user
- * @access Public
- */
+// تسجيل مستخدم جديد
 router.post('/register', async (req, res) => {
     const { username, email, password, phone } = req.body;
 
-    // Input validation
     if (!username || !email || !password || !phone) {
-        return res.status(400).json({ message: "All fields are required" });
+        return res.status(400).json({ message: "جميع الحقول مطلوبة" });
     }
 
     try {
-        // Check if email already exists
+        // التحقق من وجود البريد الإلكتروني
         const existingUsers = await queryDatabase("SELECT * FROM users WHERE email = ?", [email]);
         if (existingUsers.length > 0) {
-            return res.status(409).json({ message: "Email already in use" });
+            return res.status(409).json({ message: "البريد الإلكتروني مستخدم بالفعل" });
         }
 
-        // Hash password
+        // تشفير كلمة المرور
         const hashedPassword = await bcrypt.hash(password, 10);
-        // لإنشاء رمز مكون من 4 أرقام
         const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
+        const now = new Date();
 
-        // Insert new user
+        // إضافة المستخدم الجديد
         const result = await queryDatabase(
-            "INSERT INTO users (username, email, password, phone, verification_code, is_verified) VALUES (?, ?, ?, ?, ?, ?)",
-            [username, email, hashedPassword, phone, verificationCode, false]
+            "INSERT INTO users (username, email, password, phone, verification_code, is_verified, last_code_sent) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [username, email, hashedPassword, phone, verificationCode, false, now]
         );
 
-        // Generate JWT token
+        // إنشاء توكن
         const token = jwt.sign(
-            { userId: result.insertId },
+            { 
+                userId: user.ID,
+                username: user.username
+             },
             process.env.JWT_SECRET || "default_secret",
             { expiresIn: '1h' }
         );
-
-        // Send verification email (don't block response if this fails)
-        sendVerificationEmail(email, verificationCode)
-            .catch(err => console.error('Email sending failed:', err));
+        console.log('Token created with userId:', user.ID); // للتأكد من وجود ID
+        // إرسال بريد التحقق
+        await sendVerificationEmail(email, verificationCode);
 
         return res.status(201).json({
-            message: "User registered successfully. Please check your email for verification.",
+            message: "تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.",
             token
         });
 
     } catch (error) {
         console.error('Registration error:', error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "خطأ في الخادم" });
     }
 });
 
-/**
- * @route POST /verify-email
- * @desc Verify user's email with the code sent
- * @access Public
- */
+// التحقق من البريد الإلكتروني
 router.post('/verify-email', async (req, res) => {
     const { email, verificationCode } = req.body;
 
     try {
-        // Find user
+        // البحث عن المستخدم
         const [user] = await queryDatabase(
             "SELECT * FROM users WHERE email = ?", 
             [email]
         );
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "المستخدم غير موجود" });
         }
 
-        // Check if already verified
         if (user.is_verified) {
-            return res.status(200).json({ message: "Email already verified" });
+            return res.status(200).json({ message: "تم التحقق من البريد الإلكتروني مسبقًا" });
         }
 
-        // Check verification code
         if (user.verification_code !== verificationCode) {
-            return res.status(400).json({ message: "Invalid verification code" });
+            return res.status(400).json({ message: "رمز التحقق غير صحيح" });
         }
 
-        // Check if code is expired (10 minutes)
+        // التحقق من انتهاء صلاحية الرمز (15 دقائق)
         const codeSentTime = new Date(user.last_code_sent || user.created_at);
         const currentTime = new Date();
         const diffInMinutes = (currentTime - codeSentTime) / (1000 * 60);
 
         if (diffInMinutes > 15) {
-            return res.status(400).json({ message: "Verification code has expired" });
+            return res.status(400).json({ message: "انتهت صلاحية رمز التحقق" });
         }
 
-        // Mark as verified
+        // تحديث حالة التحقق
         await queryDatabase(
             "UPDATE users SET is_verified = true WHERE email = ?",
             [email]
         );
 
-        return res.status(200).json({ message: "Email verified successfully" });
+        return res.status(200).json({ message: "تم التحقق من البريد الإلكتروني بنجاح" });
 
     } catch (error) {
         console.error('Verification error:', error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "خطأ في الخادم" });
     }
 });
 
-
-/**
- * @route POST /login
- * @desc Authenticate user and return JWT token
- * @access Public
- */
+// تسجيل الدخول
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
-    }
-
     try {
-        const users = await queryDatabase("SELECT * FROM users WHERE email = ?", [email]);
-        
-        if (users.length === 0) {
-            return res.status(401).json({ message: "Invalid credentials" });
+        const [user] = await queryDatabase("SELECT ID, username, email, password, is_verified FROM users WHERE email = ?", [email]);
+        console.log('User from DB:', user); // تأكد من وجود user.id
+        if (!user) {
+            return res.status(401).json({ message: "بيانات الدخول غير صحيحة" });
         }
 
-        const user = users[0];
-
-        // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ message: "Invalid credentials" });
+            return res.status(401).json({ message: "بيانات الدخول غير صحيحة" });
         }
 
-        // Check if email is verified
         if (!user.is_verified) {
             return res.status(403).json({ 
-                message: "Email not verified. Please check your email for verification code.",
+                message: "لم يتم التحقق من البريد الإلكتروني",
                 needsVerification: true
             });
         }
 
-        // Generate JWT token
+        // تعديل إنشاء التوكن
         const token = jwt.sign(
-            { userId: user.id },
+            {
+                userId: user.ID, // تأكد من استخدام user.id
+                username: user.username
+            },
             process.env.JWT_SECRET || "default_secret",
             { expiresIn: '1h' }
         );
 
-        return res.status(200).json({
-            message: "Login successful",
+        console.log('Generated Token for User ID:', user.id); // سجل ID المستخدم عند إنشاء التوكن
+
+        return res.json({
+            message: "تم تسجيل الدخول بنجاح",
             token,
             user: {
                 id: user.id,
@@ -245,99 +234,314 @@ router.post('/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Login error:', error);
-        return res.status(500).json({ message: "Internal server error" });
+        console.error('Login Error:', error);
+        res.status(500).json({ message: "خطأ في الخادم" });
     }
 });
 
-/**
- * @route GET /protected
- * @desc Test protected route
- * @access Private
- */
-router.get('/protected', authenticateToken, async (req, res) => {
-    try {
-        const users = await queryDatabase("SELECT id, username, email FROM users WHERE id = ?", [req.user.userId]);
-        
-        if (users.length === 0) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        res.json({ 
-            message: "Protected route accessed successfully",
-            user: users[0]
-        });
-    } catch (error) {
-        console.error('Protected route error:', error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-});
-
-/**
- * @route GET /test
- * @desc Test route
- * @access Public
- */
-router.get('/test', (req, res) => {
-    res.json({ message: "Authentication routes are working!" });
-});
-
-// Error handling middleware
-router.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    res.status(500).json({ message: "An unexpected error occurred" });
-});
-
-
-/**
- * @route POST /resend-code
- * @desc Resend verification code
- * @access Public
- */
+// إعادة إرسال رمز التحقق
 router.post('/resend-code', async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-        return res.status(400).json({ message: "Email is required" });
+        return res.status(400).json({ message: "البريد الإلكتروني مطلوب" });
     }
 
     try {
-        // Check if user exists
+        // التحقق من وجود المستخدم
         const [user] = await queryDatabase("SELECT * FROM users WHERE email = ?", [email]);
         if (!user) {
-            return res.status(404).json({ message: "Email not found" });
+            return res.status(404).json({ message: "البريد الإلكتروني غير موجود" });
         }
 
         if (user.is_verified) {
-            return res.status(400).json({ message: "Email already verified" });
+            return res.status(400).json({ message: "تم التحقق من البريد الإلكتروني مسبقًا" });
         }
 
-        // Generate new code
+        // إنشاء رمز جديد
         const newCode = Math.floor(1000 + Math.random() * 9000).toString();
         const now = new Date();
 
-        // Update verification code and timestamp
+        // تحديث الرمز ووقت الإرسال
         await queryDatabase(
-            "INSERT INTO users (username, email, password, phone, verification_code, is_verified, last_code_sent) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [username, email, hashedPassword, phone, verificationCode, false, now]
+            "UPDATE users SET verification_code = ?, last_code_sent = ? WHERE email = ?",
+            [newCode, now, email]
         );
 
-        // Send email
+        // إرسال البريد الإلكتروني
         await sendVerificationEmail(email, newCode);
 
         return res.status(200).json({ 
-            message: "Verification code resent successfully",
-            code: newCode // For testing only
+            message: "تم إعادة إرسال رمز التحقق بنجاح"
         });
 
     } catch (error) {
         console.error('Resend error:', error);
         return res.status(500).json({ 
-            message: "Failed to resend verification code",
-            error: error.message
+            message: "فشل إعادة إرسال رمز التحقق"
         });
     }
 });
 
+// أضف هذه الدوال في ملف auth.js
 
-module.exports = router;
+/**
+ * @route POST /forgot-password
+ * @desc إرسال رمز استعادة كلمة المرور
+ * @access عام
+ */
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    // التحقق من إدخال البريد الإلكتروني
+    if (!email) {
+        return res.status(400).json({ 
+            success: false,
+            message: "البريد الإلكتروني مطلوب"
+        });
+    }
+
+    try {
+        // البحث عن المستخدم في قاعدة البيانات
+        const [user] = await queryDatabase("SELECT * FROM users WHERE email = ?", [email]);
+        
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "لا يوجد حساب مرتبط بهذا البريد الإلكتروني"
+            });
+        }
+
+        // إنشاء رمز استعادة (6 أرقام)
+        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = Date.now() + 3600000; // صلاحية ساعة واحدة
+
+        // تحديث بيانات المستخدم في قاعدة البيانات
+        await queryDatabase(
+            "UPDATE users SET reset_code = ?, reset_token_expiry = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE email = ?",
+            [resetCode, email]
+        );
+
+        // إرسال البريد الإلكتروني
+        await sendPasswordResetEmail(email, resetCode);
+
+        return res.status(200).json({
+            success: true,
+            message: "تم إرسال رمز الاستعادة إلى بريدك الإلكتروني",
+            token: resetToken // لإستخدامه في الصفحة التالية
+        });
+
+    } catch (error) {
+        console.error('خطأ في استعادة كلمة المرور:', error);
+        return res.status(500).json({
+            success: false,
+            message: "حدث خطأ أثناء محاولة استعادة كلمة المرور"
+        });
+    }
+});
+
+// دالة إرسال بريد الاستعادة
+async function sendPasswordResetEmail(email, resetCode) {
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'استعادة كلمة المرور',
+            html: `
+                <div style="font-family: 'HONORSansArabicUI-DB', sans-serif; text-align: right; direction: rtl;">
+                    <h2 style="color: #007BFF;">استعادة كلمة المرور</h2>
+                    <p>لقد تلقيت طلبًا لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
+                    <p>رمز الاستعادة الخاص بك هو:</p>
+                    <div style="font-size: 24px; font-weight: bold; margin: 20px 0; padding: 10px; background: #f5f5f5; text-align: center;">
+                        ${resetCode}
+                    </div>
+                    <p>هذا الرمز صالح لمدة ساعة واحدة فقط.</p>
+                    <p>إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد.</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('تم إرسال بريد استعادة كلمة المرور إلى:', email);
+    } catch (error) {
+        console.error('خطأ في إرسال البريد الإلكتروني:', error);
+        throw error;
+    }
+}
+
+// Route محمية للاختبار
+router.get('/protected', authenticateToken, async (req, res) => {
+    try {
+        const [user] = await queryDatabase("SELECT id, username, email FROM users WHERE id = ?", [req.user.userId]);
+        
+        if (!user) {
+            return res.status(404).json({ message: "المستخدم غير موجود" });
+        }
+
+        res.json({ 
+            message: "تم الوصول إلى المسار المحمي بنجاح",
+            user
+        });
+    } catch (error) {
+        console.error('Protected route error:', error);
+        res.status(500).json({ message: "خطأ في الخادم" });
+    }
+});
+
+// clean expired tokens every one hour
+async function cleanupExpiredTokens() {
+    try {
+        await queryDatabase(
+            "UPDATE users SET reset_code = NULL, reset_token = NULL, reset_token_expiry = NULL WHERE reset_token_expiry < ?",
+            [Date.now()]
+        );
+    } catch (error) {
+        console.error('Error cleaning up expired tokens:', error);
+    }
+}
+
+// تشغيل التنظيف كل ساعة
+setInterval(cleanupExpiredTokens, 3600000);
+
+/**
+ * @route POST /verify-reset-code
+ * @desc التحقق من رمز إعادة التعيين
+ * @access عام
+ */
+router.post('/verify-reset-code', async (req, res) => {
+    const { email, resetCode } = req.body;
+
+    try {
+        // استعلام معدل للتحقق من الصلاحية
+        const [user] = await queryDatabase(
+            "SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_token_expiry > NOW()",
+            [email, resetCode]
+        );
+
+        if (!user) {
+            // إضافة سجلات للتصحيح
+            const [dbUser] = await queryDatabase(
+                "SELECT reset_code, reset_token_expiry FROM users WHERE email = ?",
+                [email]
+            );
+            console.log('رمز التحقق في DB:', dbUser.reset_code);
+            console.log('وقت الانتهاء في DB:', dbUser.reset_token_expiry);
+            console.log('الوقت الحالي:', new Date());
+            
+            return res.status(400).json({
+                success: false,
+                message: "رمز التحقق غير صحيح أو منتهي الصلاحية"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "تم التحقق من رمز الاستعادة بنجاح"
+        });
+
+    } catch (error) {
+        console.error('خطأ في التحقق من رمز الاستعادة:', error);
+        return res.status(500).json({
+            success: false,
+            message: "حدث خطأ أثناء التحقق من رمز الاستعادة"
+        });
+    }
+});
+
+/**
+ * @route POST /reset-password
+ * @desc تحديث كلمة المرور
+ * @access عام
+ */
+router.post('/reset-password', async (req, res) => {
+    const { email, resetCode, newPassword } = req.body;
+
+    try {
+        // التحقق من رمز الاستعادة أولاً
+        const [user] = await queryDatabase(
+            "SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_token_expiry > ?",
+            [email, resetCode, Date.now()]
+        );
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "رمز التحقق غير صحيح أو منتهي الصلاحية"
+            });
+        }
+
+        // تشفير كلمة المرور الجديدة
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // تحديث كلمة المرور وإزالة رمز الاستعادة
+        await queryDatabase(
+            "UPDATE users SET password = ?, reset_code = NULL, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?",
+            [hashedPassword, email]
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "تم تحديث كلمة المرور بنجاح"
+        });
+
+    } catch (error) {
+        console.error('خطأ في إعادة تعيين كلمة المرور:', error);
+        return res.status(500).json({
+            success: false,
+            message: "حدث خطأ أثناء إعادة تعيين كلمة المرور"
+        });
+    }
+});
+
+router.get('/user-info', authenticateToken, async (req, res) => {
+    try {
+        console.log('Requested User ID:', req.user.userId); // سجل ID المستخدم المطلوب
+        
+        const [user] = await queryDatabase(
+            "SELECT id, username, email FROM users WHERE id = ?", 
+            [req.user.userId]
+        );
+        
+        if (!user) {
+            console.error('User not found in database for ID:', req.user.userId);
+            return res.status(404).json({ 
+                success: false,
+                message: "المستخدم غير موجود" 
+            });
+        }
+
+        console.log('User data from DB:', user); // سجل بيانات المستخدم من قاعدة البيانات
+        
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in /user-info:', error);
+        res.status(500).json({ 
+            success: false,
+            message: "خطأ في الخادم" 
+        });
+    }
+});
+// Route للاختبار
+router.get('/test', (req, res) => {
+    res.json({ message: "مسارات المصادقة تعمل بشكل صحيح!" });
+});
+
+// معالج الأخطاء
+router.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({ message: "حدث خطأ غير متوقع" });
+});
+
+module.exports = {
+    router,
+    authenticateToken
+};

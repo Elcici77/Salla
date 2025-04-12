@@ -4,65 +4,94 @@ const bodyParser = require('body-parser');
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
-const db = require('./db'); 
-const authRoutes = require('./routes/auth'); // استيراد مسارات المصادقة
-const path = require('path');  // لإدارة المسارات بشكل صحيح
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// استخدام CORS للسماح بالطلبات القادمة من الواجهة الأمامية على منفذ 3000
+// استيراد المسارات
+const { webhookRouter, mainRouter: sallaRouter } = require('./routes/salla');
+const { router: authRouter, authenticateToken } = require('./routes/auth');
+
+// ✅ Middleware CORS
 app.use(cors({
-    origin: "http://localhost:3000", // السماح بالطلبات من هذا العنوان فقط
-    credentials: true, // تفعيل إرسال الكوكيز مع الطلبات
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
 }));
 
-// خدمة الملفات الثابتة من مجلد public
-app.use(express.static(path.join(__dirname, 'public')));  // يمكن تعديل المجلد حسب المكان الذي خزنت فيه ملفات HTML و CSS
+// ✅ ملفات ستاتيك
+app.use(express.static(path.join(__dirname, 'public')));
 
-// تحليل البيانات القادمة من الطلبات
-app.use(bodyParser.json());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ✅ جلسات و كوكيز
 app.use(cookieParser());
-
-// إعداد الجلسات
 app.use(session({
     secret: process.env.SESSION_SECRET || "mysecretkey",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // اجعلها `true` عند استخدام HTTPS
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000
+    }
 }));
 
-// استخدام مسارات المصادقة
-app.use('/api/auth', authRoutes);
+// ✅ تحميل Webhook قبل أي JSON parsing
+app.use('/api/salla/webhooks', express.raw({ type: 'application/json' }), webhookRouter);
 
-// نقطة البداية لاختبار الخادم
+// ✅ Body Parser عادي لباقي المسارات
+app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ باقي المسارات
+app.use('/api/salla', sallaRouter);
+app.use('/api/auth', authRouter);
+
+// ✅ صفحات الـ HTML
 app.get("/", (req, res) => {
-    res.send("🚀 الخادم يعمل...");
+    res.send("الخادم يعمل...");
 });
 
-// تقديم صفحة التسجيل عند الوصول إلى /register
 app.get("/register", (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'register.html')); // تأكد من وضع ملف register.html في مجلد public
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
-// نقطة اختبار إضافية
-app.get('/test', (req, res) => {
-    res.json({ message: "✅ اختبار الخادم يعمل!" });
+app.get("/login", (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// اختبار اتصال قواعد البيانات
-app.get("/db-test", (req, res) => {
-    db.query("SELECT 1", (err, results) => {
-        if (err) {
-            console.error("خطأ في الاتصال بقاعدة البيانات:", err);
-            return res.status(500).json({ message: "فشل الاتصال بقاعدة البيانات" });
-        }
-        res.json({ message: "✅ الاتصال بقاعدة البيانات تم بنجاح!" });
+app.get("/verify-email", (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'verify-email.html'));
+});
+
+app.get("/forgot-password", (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'forget-password.html'));
+});
+
+app.get("/reset-password", (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'reset-password.html'));
+});
+
+app.get("/dashboard", authenticateToken, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+// ✅ Error Handling
+app.use((err, req, res, next) => {
+    console.error("Global error handler:", err);
+    res.status(500).json({ 
+        message: "حدث خطأ في الخادم",
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
-// تشغيل الخادم
-app.listen(PORT, () => {
+// ✅ تشغيل السيرفر
+const server = app.listen(PORT, () => {
     console.log(`✅ الخادم يعمل على المنفذ ${PORT}`);
+});
+
+server.on('error', (err) => {
+    console.error('Server error:', err);
+    if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use`);
+        process.exit(1);
+    }
 });

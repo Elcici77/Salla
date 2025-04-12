@@ -1,0 +1,7 @@
+website: https://wsalla.com/api/salla/callback
+
+client ID: 9af5cc17-8e13-4c21-b066-7a3dba5627c8
+
+client secret: 8cabec846cfce1653b1ec1c2e2ab7b5e
+
+webhook secrete key: 36e9127d3e3548e43147548af7fd3eeb
