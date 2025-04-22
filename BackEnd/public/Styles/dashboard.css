@@ -2,21 +2,27 @@
     --primary-color: #3498db;
     --secondary-color: #2c3e50;
     --text-color: #333;
-    --light-bg: #f8f9fa;
+    --light-bg: #f5f7fa;
+    --danger-color: #e74c3c;
+    --success-color: #2ecc71;
+    --warning-color: #f39c12;
+    --border-color: #e0e0e0;
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --sidebar-width: 250px;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Tajawal', 'Arial', sans-serif;
 }
 
 body {
     background-color: var(--light-bg);
     color: var(--text-color);
     overflow-x: hidden;
+    direction: rtl;
 }
 
 /* Navbar Styles */
@@ -48,11 +54,21 @@ body {
     padding: 0.5rem 1rem;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .connect-store-btn:hover {
     background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.connect-store-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .user-profile {
@@ -90,11 +106,22 @@ body {
     border-radius: 5px;
     padding: 0.5rem 0;
     width: 200px;
-    display: none;
+    display: none; /* مخفية بشكل افتراضي */
+    z-index: 1001;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.dropdown-menu.show {
+    display: block; /* تظهر عند النقر */
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .dropdown-menu a {
-    display: block;
+    display: flex;
+    align-items: center;
     padding: 0.7rem 1rem;
     color: var(--text-color);
     text-decoration: none;
@@ -109,8 +136,19 @@ body {
     margin-left: 8px;
 }
 
-.user-profile:hover .dropdown-menu {
-    display: block;
+/* أضف سهم للقائمة */
+.user-profile {
+    position: relative;
+    cursor: pointer;
+}
+
+.user-profile .dropdown-arrow {
+    margin-right: 5px;
+    transition: transform 0.3s;
+}
+
+.user-profile .dropdown-arrow.rotate {
+    transform: rotate(180deg);
 }
 
 /* Sidebar Styles */
@@ -118,13 +156,14 @@ body {
     position: fixed;
     top: 70px;
     right: -250px;
-    width: 250px;
+    width: var(--sidebar-width);
     height: calc(100vh - 70px);
     background-color: white;
     box-shadow: var(--shadow);
     padding: 1.5rem 0;
     transition: right 0.3s;
     z-index: 999;
+    overflow-y: auto;
 }
 
 .sidebar.active {
@@ -134,7 +173,15 @@ body {
 .sidebar-item {
     padding: 0.8rem 1.5rem;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    border-right: 3px solid transparent;
+}
+
+.sidebar-item.active {
+    background-color: rgba(52, 152, 219, 0.1);
+    border-right-color: var(--primary-color);
 }
 
 .sidebar-item:hover {
@@ -144,6 +191,8 @@ body {
 .sidebar-item i {
     margin-left: 10px;
     color: var(--primary-color);
+    width: 20px;
+    text-align: center;
 }
 
 /* Main Content Styles */
@@ -155,14 +204,16 @@ body {
     transition: margin-right 0.3s;
 }
 
+.sidebar.active ~ .main-content {
+    margin-right: var(--sidebar-width);
+}
+
 .welcome-card {
     background-color: white;
     border-radius: 10px;
     padding: 2rem;
     box-shadow: var(--shadow);
-    text-align: center;
-    max-width: 800px;
-    margin: 0 auto;
+    margin-bottom: 2rem;
 }
 
 .welcome-card h1 {
@@ -170,22 +221,183 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Connected Stores Section */
+.connected-stores-section {
+    background-color: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.connected-stores-section h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.connected-stores-section h2 i {
+    color: var(--primary-color);
+}
+
+.stores-container {
+    margin-top: 1rem;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    color: #7f8c8d;
+    text-align: center;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #bdc3c7;
+}
+
+.stores-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.store-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+    background-color: white;
+}
+
+.store-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.store-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 10px;
+}
+
+.store-header i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.store-header h3 {
+    margin: 0;
+    color: var(--secondary-color);
+}
+
+.store-details {
+    margin: 1rem 0;
+}
+
+.store-details p {
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+}
+
+.store-details i {
+    color: #7f8c8d;
+    width: 20px;
+    text-align: center;
+}
+
+.disconnect-btn {
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 1rem;
+    gap: 8px;
+}
+
+.disconnect-btn:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
+
+/* Notification Messages */
+.error-message, .success-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 25px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    z-index: 1200;
+    animation: slideIn 0.3s forwards;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 90%;
+    box-shadow: var(--shadow);
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+@keyframes slideIn {
+    from { 
+        transform: translate(-50%, -100px); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translate(-50%, 0); 
+        opacity: 1; 
+    }
+}
+
 /* Mobile Styles */
 .menu-toggle {
-    display: none;
-    position: fixed;
-    right: 20px;
-    top: 20px;
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    border-radius: 5px;
+    padding: 0.5rem;
     font-size: 1.2rem;
-    z-index: 1100;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.menu-toggle:hover {
+    background: #2980b9;
 }
 
 .sidebar-overlay {
@@ -199,32 +411,66 @@ body {
     z-index: 998;
 }
 
-.error-message {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #ff4444;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    z-index: 1200;
-    animation: fadeIn 0.3s;
+.sidebar.active + .sidebar-overlay {
+    display: block;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .stores-list {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
 }
 
 @media (max-width: 768px) {
-    .menu-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .sidebar {
+        width: 220px;
     }
     
-    .sidebar.active + .sidebar-overlay {
-        display: block;
+    .sidebar.active ~ .main-content {
+        margin-right: 220px;
     }
+    
+    .main-content {
+        padding: 1.5rem;
+    }
+    
+    .welcome-card,
+    .connected-stores-section {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .stores-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .navbar {
+        padding: 0.8rem 1rem;
+    }
+    
+    .connect-store-btn {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .welcome-card,
+    .connected-stores-section {
+        padding: 1rem;
+    }
+}
+
+/* Loading Spinner */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

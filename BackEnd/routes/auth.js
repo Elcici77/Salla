@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const db = require('../db');
+const { pool, query } = require('../db');
 const router = express.Router();
 
 require('dotenv').config();
@@ -55,43 +55,33 @@ async function sendVerificationEmail(email, verificationCode) {
     }
 }
 
-// مساعد استعلام قاعدة البيانات
-function queryDatabase(sql, params) {
-    return new Promise((resolve, reject) => {
-        db.query(sql, params, (err, result) => {
-            if (err) {
-                console.error('Database error:', err);
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-}
-
 // Middleware المصادقة
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     
-    if (!token) return res.sendStatus(401);
+    if (!token) {
+        return res.status(401).json({ message: 'يجب تقديم توكن المصادقة' });
+    }
 
-    jwt.verify(token, process.env.JWT_SECRET || "default_secret", (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            console.error('JWT Verification Error:', err);
-            return res.sendStatus(403);
+            console.error('JWT Error:', {
+                name: err.name,
+                message: err.message,
+                expiredAt: err.expiredAt
+            });
+            return res.status(403).json({ message: 'توكن غير صالح أو منتهي الصلاحية' });
         }
         
-        // إضافة هذا السجل للتأكد من محتوى التوكن
-        console.log('Decoded Token:', decoded);
-        
         req.user = {
-            userId: decoded.userId, // استخدم نفس المفتاح المستخدم عند إنشاء التوكن
+            userId: decoded.userId,
             username: decoded.username
         };
         next();
     });
 }
+
 // تسجيل مستخدم جديد
 router.post('/register', async (req, res) => {
     const { username, email, password, phone } = req.body;
@@ -102,7 +92,7 @@ router.post('/register', async (req, res) => {
 
     try {
         // التحقق من وجود البريد الإلكتروني
-        const existingUsers = await queryDatabase("SELECT * FROM users WHERE email = ?", [email]);
+        const [existingUsers] = await query("SELECT * FROM users WHERE email = ?", [email]);
         if (existingUsers.length > 0) {
             return res.status(409).json({ message: "البريد الإلكتروني مستخدم بالفعل" });
         }
@@ -113,7 +103,7 @@ router.post('/register', async (req, res) => {
         const now = new Date();
 
         // إضافة المستخدم الجديد
-        const result = await queryDatabase(
+        const [result] = await query(
             "INSERT INTO users (username, email, password, phone, verification_code, is_verified, last_code_sent) VALUES (?, ?, ?, ?, ?, ?, ?)",
             [username, email, hashedPassword, phone, verificationCode, false, now]
         );
@@ -121,13 +111,15 @@ router.post('/register', async (req, res) => {
         // إنشاء توكن
         const token = jwt.sign(
             { 
-                userId: user.ID,
-                username: user.username
-             },
+                userId: result.insertId,
+                username: username
+            },
             process.env.JWT_SECRET || "default_secret",
             { expiresIn: '1h' }
         );
-        console.log('Token created with userId:', user.ID); // للتأكد من وجود ID
+
+        console.log('Token created with userId:', result.insertId);
+
         // إرسال بريد التحقق
         await sendVerificationEmail(email, verificationCode);
 
@@ -138,7 +130,10 @@ router.post('/register', async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
-        return res.status(500).json({ message: "خطأ في الخادم" });
+        return res.status(500).json({ 
+            message: "خطأ في الخادم",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -146,23 +141,38 @@ router.post('/register', async (req, res) => {
 router.post('/verify-email', async (req, res) => {
     const { email, verificationCode } = req.body;
 
+    
     try {
-        // البحث عن المستخدم
-        const [user] = await queryDatabase(
+        // 1. البحث عن المستخدم - استعلام معدل
+        const [users] = await query(
             "SELECT * FROM users WHERE email = ?", 
             [email]
         );
 
-        if (!user) {
+        if (users.length === 0) {
             return res.status(404).json({ message: "المستخدم غير موجود" });
         }
 
-        if (user.is_verified) {
-            return res.status(200).json({ message: "تم التحقق من البريد الإلكتروني مسبقًا" });
-        }
+        const user = users[0];
 
-        if (user.verification_code !== verificationCode) {
-            return res.status(400).json({ message: "رمز التحقق غير صحيح" });
+        // 2. تسجيل البيانات للتصحيح
+        console.log('الكود المدخل:', verificationCode);
+        console.log('الكود في DB:', user.verification_code);
+        console.log('نوع الكود في DB:', typeof user.verification_code);
+
+        // 3. المقارنة كـ Strings
+        if (user.verification_code !== verificationCode.toString()) {
+            return res.status(400).json({ 
+                message: "رمز التحقق غير صحيح",
+                debug: {
+                    received: verificationCode,
+                    expected: user.verification_code,
+                    types: {
+                        received: typeof verificationCode,
+                        expected: typeof user.verification_code
+                    }
+                }
+            });
         }
 
         // التحقق من انتهاء صلاحية الرمز (15 دقائق)
@@ -175,10 +185,7 @@ router.post('/verify-email', async (req, res) => {
         }
 
         // تحديث حالة التحقق
-        await queryDatabase(
-            "UPDATE users SET is_verified = true WHERE email = ?",
-            [email]
-        );
+        await query("UPDATE users SET is_verified = true WHERE email = ?", [email]);
 
         return res.status(200).json({ message: "تم التحقق من البريد الإلكتروني بنجاح" });
 
@@ -188,16 +195,20 @@ router.post('/verify-email', async (req, res) => {
     }
 });
 
+
 // تسجيل الدخول
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const [user] = await queryDatabase("SELECT ID, username, email, password, is_verified FROM users WHERE email = ?", [email]);
-        console.log('User from DB:', user); // تأكد من وجود user.id
-        if (!user) {
+        const [users] = await query("SELECT * FROM users WHERE email = ?", [email]);
+        
+        if (users.length === 0) {
             return res.status(401).json({ message: "بيانات الدخول غير صحيحة" });
         }
+
+        const user = users[0];
+        console.log('User from DB:', user);
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -211,23 +222,26 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // تعديل إنشاء التوكن
+        // إنشاء التوكن
         const token = jwt.sign(
             {
-                userId: user.ID, // تأكد من استخدام user.id
+                userId: user.ID || user.id,
                 username: user.username
             },
             process.env.JWT_SECRET || "default_secret",
             { expiresIn: '1h' }
         );
 
-        console.log('Generated Token for User ID:', user.id); // سجل ID المستخدم عند إنشاء التوكن
+        console.log('Generated Token for User:', {
+            userId: user.ID || user.id,
+            username: user.username
+        });
 
         return res.json({
             message: "تم تسجيل الدخول بنجاح",
             token,
             user: {
-                id: user.id,
+                id: user.ID || user.id,
                 username: user.username,
                 email: user.email
             }
@@ -235,7 +249,10 @@ router.post('/login', async (req, res) => {
 
     } catch (error) {
         console.error('Login Error:', error);
-        res.status(500).json({ message: "خطأ في الخادم" });
+        res.status(500).json({ 
+            message: "خطأ في الخادم",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -249,7 +266,7 @@ router.post('/resend-code', async (req, res) => {
 
     try {
         // التحقق من وجود المستخدم
-        const [user] = await queryDatabase("SELECT * FROM users WHERE email = ?", [email]);
+        const [user] = await query("SELECT * FROM users WHERE email = ?", [email]);
         if (!user) {
             return res.status(404).json({ message: "البريد الإلكتروني غير موجود" });
         }
@@ -263,7 +280,7 @@ router.post('/resend-code', async (req, res) => {
         const now = new Date();
 
         // تحديث الرمز ووقت الإرسال
-        await queryDatabase(
+        await query(
             "UPDATE users SET verification_code = ?, last_code_sent = ? WHERE email = ?",
             [newCode, now, email]
         );
@@ -303,7 +320,7 @@ router.post('/forgot-password', async (req, res) => {
 
     try {
         // البحث عن المستخدم في قاعدة البيانات
-        const [user] = await queryDatabase("SELECT * FROM users WHERE email = ?", [email]);
+        const [user] = await query("SELECT * FROM users WHERE email = ?", [email]);
         
         if (!user) {
             return res.status(404).json({
@@ -318,7 +335,7 @@ router.post('/forgot-password', async (req, res) => {
         const resetTokenExpiry = Date.now() + 3600000; // صلاحية ساعة واحدة
 
         // تحديث بيانات المستخدم في قاعدة البيانات
-        await queryDatabase(
+        await query(
             "UPDATE users SET reset_code = ?, reset_token_expiry = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE email = ?",
             [resetCode, email]
         );
@@ -373,7 +390,7 @@ async function sendPasswordResetEmail(email, resetCode) {
 // Route محمية للاختبار
 router.get('/protected', authenticateToken, async (req, res) => {
     try {
-        const [user] = await queryDatabase("SELECT id, username, email FROM users WHERE id = ?", [req.user.userId]);
+        const [user] = await query("SELECT ID, username, email FROM users WHERE ID = ?", [req.user.userId]);
         
         if (!user) {
             return res.status(404).json({ message: "المستخدم غير موجود" });
@@ -392,7 +409,7 @@ router.get('/protected', authenticateToken, async (req, res) => {
 // clean expired tokens every one hour
 async function cleanupExpiredTokens() {
     try {
-        await queryDatabase(
+        await query(
             "UPDATE users SET reset_code = NULL, reset_token = NULL, reset_token_expiry = NULL WHERE reset_token_expiry < ?",
             [Date.now()]
         );
@@ -414,14 +431,14 @@ router.post('/verify-reset-code', async (req, res) => {
 
     try {
         // استعلام معدل للتحقق من الصلاحية
-        const [user] = await queryDatabase(
+        const [user] = await query(
             "SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_token_expiry > NOW()",
             [email, resetCode]
         );
 
         if (!user) {
             // إضافة سجلات للتصحيح
-            const [dbUser] = await queryDatabase(
+            const [dbUser] = await query(
                 "SELECT reset_code, reset_token_expiry FROM users WHERE email = ?",
                 [email]
             );
@@ -459,7 +476,7 @@ router.post('/reset-password', async (req, res) => {
 
     try {
         // التحقق من رمز الاستعادة أولاً
-        const [user] = await queryDatabase(
+        const [user] = await query(
             "SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_token_expiry > ?",
             [email, resetCode, Date.now()]
         );
@@ -475,7 +492,7 @@ router.post('/reset-password', async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         // تحديث كلمة المرور وإزالة رمز الاستعادة
-        await queryDatabase(
+        await query(
             "UPDATE users SET password = ?, reset_code = NULL, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?",
             [hashedPassword, email]
         );
@@ -498,7 +515,7 @@ router.get('/user-info', authenticateToken, async (req, res) => {
     try {
         console.log('Requested User ID:', req.user.userId); // سجل ID المستخدم المطلوب
         
-        const [user] = await queryDatabase(
+        const [user] = await query(
             "SELECT id, username, email FROM users WHERE id = ?", 
             [req.user.userId]
         );
@@ -516,9 +533,9 @@ router.get('/user-info', authenticateToken, async (req, res) => {
         res.json({
             success: true,
             user: {
-                id: user.id,
-                username: user.username,
-                email: user.email
+                id: user[0].ID,
+                username: user[0].username,
+                email: user[0].email
             }
         });
 

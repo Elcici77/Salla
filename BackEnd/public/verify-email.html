@@ -103,7 +103,7 @@ verifyForm.addEventListener('submit', async (e) => {
 
     try {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'جاري التحقق...';
+        submitBtn.textContent = '...جاري التحقق';
         
         const response = await fetch('http://localhost:5000/api/auth/verify-email', {
             method: 'POST',

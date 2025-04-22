@@ -1,30 +1,28 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
+require('dotenv').config();
 
-// إنشاء الاتصال الأساسي
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '5729053996mM',
-  database: 'salla'
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '5729053996mM',
+  database: process.env.DB_NAME || 'salla',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-// إنشاء نسخة تدعم Promises
-const promiseDb = db.promise();
+// اختبار الاتصال
+pool.getConnection()
+  .then(conn => {
+    console.log(' تم الاتصال بقاعدة البيانات بنجاح!');
+    conn.release();
+  })
+  .catch(err => {
+    console.error(' فشل الاتصال بقاعدة البيانات:', err);
+    process.exit(1);
+  });
 
-// التحقق من الاتصال
-db.connect((err) => {
-  if (err) {
-    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
-  } else {
-    console.log('✅ تم الاتصال بقاعدة البيانات بنجاح!');
-  }
-});
-
-// تصدير كلا النسختين
 module.exports = {
-  // للاستخدام مع async/await (في salla.js)
-  promise: promiseDb,
-  
-  // للاستخدام مع Callbacks (في باقي الملفات)
-  regular: db
+  pool,
+  query: (sql, params) => pool.query(sql, params)
 };

@@ -12,16 +12,16 @@ const PORT = process.env.PORT || 5000;
 const { webhookRouter, mainRouter: sallaRouter } = require('./routes/salla');
 const { router: authRouter, authenticateToken } = require('./routes/auth');
 
-// ✅ Middleware CORS
+//  Middleware CORS
 app.use(cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
 }));
 
-// ✅ ملفات ستاتيك
+//  ملفات ستاتيك
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ جلسات و كوكيز
+//  جلسات و كوكيز
 app.use(cookieParser());
 app.use(session({
     secret: process.env.SESSION_SECRET || "mysecretkey",
@@ -33,21 +33,25 @@ app.use(session({
     }
 }));
 
-// ✅ تحميل Webhook قبل أي JSON parsing
+//  تحميل Webhook قبل أي JSON parsing
 app.use('/api/salla/webhooks', express.raw({ type: 'application/json' }), webhookRouter);
 
-// ✅ Body Parser عادي لباقي المسارات
+// Body Parser عادي لباقي المسارات
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ باقي المسارات
+// باقي المسارات
 app.use('/api/salla', sallaRouter);
 app.use('/api/auth', authRouter);
 
-// ✅ صفحات الـ HTML
+//  صفحات الـ HTML
 app.get("/", (req, res) => {
-    res.send("الخادم يعمل...");
+    res.sendFile(path.join(__dirname, 'public', 'HomePage.html'));
+});
+
+app.get("/home", (req,res) => {
+    res,sendFile(path.join(__dirname, 'pubic', 'HomePage.html'));
 });
 
 app.get("/register", (req, res) => {
@@ -74,7 +78,7 @@ app.get("/dashboard", authenticateToken, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// ✅ Error Handling
+//  Error Handling
 app.use((err, req, res, next) => {
     console.error("Global error handler:", err);
     res.status(500).json({ 
@@ -83,7 +87,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// ✅ تشغيل السيرفر
+//  تشغيل السيرفر
 const server = app.listen(PORT, () => {
     console.log(`✅ الخادم يعمل على المنفذ ${PORT}`);
 });
