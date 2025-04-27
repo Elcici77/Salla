@@ -1,0 +1,5 @@
+IP: 195.35.2.10
+login as: root
+password: Qlzpam.0552037711
+phpmyadmin password: 1234
+phpmyadminlink: http://195.35.2.10/phpmyadmin/

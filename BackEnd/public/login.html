@@ -5,41 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول</title>
     <link rel="stylesheet" href="Styles/LoginStyles.css">
+    <link rel="stylesheet" href="Styles/Buttons.css">
+    <link rel="preload" href="Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
 </head>
 <body>
     <!-- Logo at the top-right -->
-    <div class="logo">🔷 شعارك هنا</div>
-
-    <!-- Left side with background image -->
-    <div class="left-side">
-        <img src="images/login.jpg" alt="صورة توضيحية">
-    </div>
+    <div class="logo"><img src="logo/whats sella/4.png" alt="logo" loading="lazy"></div>
 
     <!-- Right side with login form -->
     <div class="right-side">
         <div class="switch-buttons">
+            <button onclick="location.href='register.html'">إنشاء حساب جديـد</button>
             <button class="active">تسجيل الدخول</button>
-            <button onclick="location.href='register.html'">إنشاء حساب</button>
         </div>
 
         <form id="loginForm" class="login-form">
             <div id="errorMsg" class="error-message" style="display: none;"></div>
             
             <div class="input-group">
-                <input type="email" id="email" required>
+                <input type="email" id="email" required placeholder=" ">
                 <label for="email">البريد الإلكتروني</label>
+                <div id="email-validation" class="validation-message" style="display: none;"></div>
             </div>
 
             <div class="input-group">
                 <div class="password-container">
-                    <input type="password" id="password" required>
+                    <input type="password" id="password" required placeholder=" ">
                     <label for="password">كلمة المرور</label>
-                    <span class="show-password" onclick="togglePasswordVisibility()">👁️</span>
+                    <div class="password-toggle" onclick="togglePasswordVisibility()">
+                        <img src="icons/eye.png" class="eye-icon" alt="Toggle Password" loading="lazy">
+                    </div>
                 </div>
+                <div id="password-validation" class="validation-message" style="display: none;"></div>
             </div>
 
             <div class="options">
-                <label><input type="checkbox" id="rememberMe"> تذكرني</label>
+                <div class="remember-me-container">
+                    <label class="checkbox-wrapper-51">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="toggle">
+                            <span class="toggle-icon">
+                                <svg width="10px" height="10px" viewBox="0 0 10 10">
+                                    <path d="M5,1 L5,1 C2.790861,1 1,2.790861 1,5 L1,5 C1,7.209139 2.790861,9 5,9 L5,9 C7.209139,9 9,7.209139 9,5 L9,5 C9,2.790861 7.209139,1 5,1 L5,9 L5,1 Z"></path>
+                                </svg>
+                            </span>
+                        </span>
+                        <span class="remember-text">تذكرني</span>
+                    </label>
+                </div>
                 <a href="forgot-password.html">نسيت كلمة المرور؟</a>
             </div>
 
@@ -47,9 +60,14 @@
             
             <div class="loading" id="loading" style="display: none;">
                 <div class="spinner"></div>
-                <p>...جاري تسجيل الدخول </p>
+                <p>...جاري تسجيل الدخول</p>
             </div>
         </form>
+    </div>
+
+    <!-- Left side with background image -->
+    <div class="left-side">
+        <img src="images/leftimage_leo.jpg" alt="صورة توضيحية" loading="lazy">
     </div>
 
     <script>
@@ -61,18 +79,26 @@
         const loading = document.getElementById('loading');
         const errorMsg = document.getElementById('errorMsg');
         const rememberMe = document.getElementById('rememberMe');
+        const emailValidation = document.getElementById('email-validation');
+        const passwordValidation = document.getElementById('password-validation');
 
         // تبديل عرض كلمة المرور
         function togglePasswordVisibility() {
             const passwordField = document.getElementById("password");
-            const icon = document.querySelector(".show-password");
+            const eyeIcon = document.querySelector(".eye-icon");
             if (passwordField.type === "password") {
                 passwordField.type = "text";
-                icon.textContent = "🙈";
+                eyeIcon.src = "icons/view.png";
             } else {
                 passwordField.type = "password";
-                icon.textContent = "👁️";
+                eyeIcon.src = "icons/eye.png";
             }
+        }
+
+        // التحقق من صحة البريد الإلكتروني
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
         }
 
         // عند تحميل الصفحة، تحقق إذا كان هناك بيانات محفوظة
@@ -85,7 +111,47 @@
                 passwordInput.value = savedPassword;
                 rememberMe.checked = true;
             }
+
+            // إضافة مستمعات الأحداث للتحقق من الصحة
+            emailInput.addEventListener('blur', validateEmailField);
+            passwordInput.addEventListener('blur', validatePasswordField);
         });
+
+        function validateEmailField() {
+            const email = emailInput.value.trim();
+            if (!email) {
+                emailValidation.textContent = 'يرجى إدخال البريد الإلكتروني';
+                emailValidation.style.display = 'block';
+                emailValidation.classList.remove('valid');
+                return false;
+            }
+            if (!validateEmail(email)) {
+                emailValidation.textContent = 'البريد الإلكتروني غير صالح';
+                emailValidation.style.display = 'block';
+                emailValidation.classList.remove('valid');
+                return false;
+            }
+            emailValidation.textContent = 'البريد الإلكتروني صالح';
+            emailValidation.style.display = 'block';
+            emailValidation.classList.add('valid');
+            setTimeout(() => { emailValidation.style.display = 'none'; }, 2000);
+            return true;
+        }
+
+        function validatePasswordField() {
+            const password = passwordInput.value;
+            if (!password) {
+                passwordValidation.textContent = 'يرجى إدخال كلمة المرور';
+                passwordValidation.style.display = 'block';
+                passwordValidation.classList.remove('valid');
+                return false;
+            }
+            passwordValidation.textContent = 'كلمة المرور صالحة';
+            passwordValidation.style.display = 'block';
+            passwordValidation.classList.add('valid');
+            setTimeout(() => { passwordValidation.style.display = 'none'; }, 2000);
+            return true;
+        }
 
         // إرسال نموذج تسجيل الدخول
         loginForm.addEventListener('submit', async (e) => {
@@ -96,15 +162,14 @@
             const remember = rememberMe.checked;
 
             // التحقق من المدخلات
-            if (!email || !password) {
-                showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+            if (!validateEmailField() | !validatePasswordField()) {
                 return;
             }
 
             try {
                 // عرض حالة التحميل
                 loginButton.disabled = true;
-                loading.style.display = 'block';
+                loading.style.display = 'flex';
                 errorMsg.style.display = 'none';
 
                 // إرسال طلب تسجيل الدخول

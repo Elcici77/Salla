@@ -1,215 +1,218 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تأكيد البريد الإلكتروني</title>
     <link rel="stylesheet" href="Styles/verify-email.css">
+    <link rel="preload" href="Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
 </head>
 <body>
+    <!-- Logo at the top-right -->
+    <div class="logo"><img src="logo/whats sella/4.png" alt="logo" loading="lazy"></div>
 
-<div class="left-side">
-    <img src="email-verification.jpg" alt="تحقق من البريد الإلكتروني">
-</div>
+    <!-- Right side with verification form -->
+    <div class="right-side">
+        <div class="content">
+            <h2>تحقق من بريدك الإلكتروني</h2>
+            <p id="emailMessage">لقد أرسلنا رمز تحقق مكونًا من 4 أرقام إلى بريدك الإلكتروني. أدخل الرمز أدناه للتحقق من حسابك.</p>
 
-<div class="right-side">
-    <div class="logo">شعار الموقع</div>
-    <div class="content">
-        <h2>تحقق من بريدك الإلكتروني</h2>
-        <p id="emailMessage">لقد أرسلنا رمز تحقق مكونًا من 4 أرقام إلى بريدك الإلكتروني. أدخل الرمز أدناه للتحقق من حسابك.</p>
+            <div id="errorMsg" class="error-message" style="display: none;"></div>
+            <div id="successMsg" class="success-message" style="display: none;"></div>
 
-        <div id="errorMsg" style="color: red; margin: 10px 0; display: none;"></div>
-        <div id="successMsg" style="color: green; margin: 10px 0; display: none;"></div>
+            <form id="verifyForm" class="verification-form">
+                <div class="code-inputs">
+                    <input type="text" maxlength="1" class="code" required data-index="0">
+                    <input type="text" maxlength="1" class="code" required data-index="1">
+                    <input type="text" maxlength="1" class="code" required data-index="2">
+                    <input type="text" maxlength="1" class="code" required data-index="3" autofocus>
+                    <input type="hidden" id="userEmail">
+                </div>
+                <button type="submit" id="submitBtn">تأكيد</button>
+            </form>
 
-        <form id="verifyForm" class="verification-form">
-            <div class="code-inputs">
-                <input type="text" maxlength="1" class="code" required autofocus>
-                <input type="text" maxlength="1" class="code" required>
-                <input type="text" maxlength="1" class="code" required>
-                <input type="text" maxlength="1" class="code" required>
-                <input type="hidden" id="userEmail">
+            <div class="resend">
+                <p>لم يصلك الرمز؟ <a href="#" id="resendLink">إعادة إرسال</a></p>
+                <p id="resendTimer" style="display: none;">يمكنك إعادة الإرسال خلال <span id="countdown">60</span> ثانية</p>
             </div>
-            <button type="submit" id="submitBtn">تأكيد</button>
-        </form>
-
-        <div class="resend">
-            <p>لم يصلك الرمز؟ <a href="#" id="resendLink">إعادة إرسال</a></p>
-            <p id="resendTimer" style="display: none;">يمكنك إعادة الإرسال خلال <span id="countdown">60</span> ثانية</p>
         </div>
     </div>
-</div>
 
-<script>
-    // عناصر DOM
-    const verifyForm = document.getElementById('verifyForm');
-    const codeInputs = document.querySelectorAll('.code');
-    const userEmailInput = document.getElementById('userEmail');
-    const submitBtn = document.getElementById('submitBtn');
-    const resendLink = document.getElementById('resendLink');
-    const resendTimer = document.getElementById('resendTimer');
-    const countdownEl = document.getElementById('countdown');
-    const errorMsg = document.getElementById('errorMsg');
-    const successMsg = document.getElementById('successMsg');
-    const emailMessage = document.getElementById('emailMessage');
+    <!-- Left side with background image -->
+    <div class="left-side">
+        <img src="images/verify_email_ed1.png" alt="صورة توضيحية" loading="lazy">
+    </div>
 
-    // عند تحميل الصفحة
-    document.addEventListener('DOMContentLoaded', () => {
-        // الحصول على البريد الإلكتروني من URL أو localStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const email = urlParams.get('email') || localStorage.getItem('userEmail');
-        
-        if (email) {
-            userEmailInput.value = email;
-            emailMessage.textContent = `لقد أرسلنا رمز تحقق مكونًا من 4 أرقام إلى ${email}. أدخل الرمز أدناه للتحقق من حسابك.`;
-            startResendTimer();
-        } else {
-            errorMsg.style.display = 'block';
-            errorMsg.textContent = 'لم يتم العثور على بريد إلكتروني. يرجى التسجيل مرة أخرى.';
-            verifyForm.style.display = 'none';
-        }
-    });
+    <script>
+        // عناصر DOM
+        const verifyForm = document.getElementById('verifyForm');
+        const codeInputs = document.querySelectorAll('.code');
+        const userEmailInput = document.getElementById('userEmail');
+        const submitBtn = document.getElementById('submitBtn');
+        const resendLink = document.getElementById('resendLink');
+        const resendTimer = document.getElementById('resendTimer');
+        const countdownEl = document.getElementById('countdown');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        const emailMessage = document.getElementById('emailMessage');
 
-    // إدارة إدخال الرمز
-    codeInputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-            if (e.inputType === 'insertText' && input.value && index < codeInputs.length - 1) {
-                codeInputs[index + 1].focus();
-            }
-            errorMsg.style.display = 'none';
-        });
-        
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && !input.value && index > 0) {
-                codeInputs[index - 1].focus();
-            }
-        });
-        
-        // السماح بالأرقام فقط
-        input.addEventListener('keypress', (e) => {
-            if (e.key < '0' || e.key > '9') {
-                e.preventDefault();
-            }
-        });
-    });
-
-    // إرسال النموذج
-    // In the verifyForm event listener:
-verifyForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // لرمز مكون من 4 أرقام
-    const verificationCode = Array.from(codeInputs).slice(0, 4).map(input => input.value).join('');
-    const email = userEmailInput.value;
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.textContent = '...جاري التحقق';
-        
-        const response = await fetch('http://localhost:5000/api/auth/verify-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ 
-                email: email,
-                verificationCode: verificationCode 
-            }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Verification failed');
-        }
-
-        showSuccess(data.message || 'تم التحقق بنجاح!');
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1500);
-
-    } catch (error) {
-        showError(error.message);
-        codeInputs.forEach(input => input.value = '');
-        codeInputs[0].focus();
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'تأكيد';
-    }
-});
-
-    // إعادة إرسال الرمز
-    resendLink.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const email = userEmailInput.value;
-
-        if (!email) {
-            showError('الرجاء إدخال البريد الإلكتروني أولاً');
-            return;
-        }
-
-        try {
-            resendLink.style.display = 'none';
-            resendTimer.style.display = 'block';
-            startResendTimer(); // بدء المؤقت فورًا
+        // عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            // الحصول على البريد الإلكتروني من URL أو localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email') || localStorage.getItem('userEmail');
             
-            const response = await fetch('http://localhost:5000/api/auth/resend-code', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email })
+            if (email) {
+                userEmailInput.value = email;
+                emailMessage.textContent = `لقد أرسلنا رمز تحقق مكونًا من 4 أرقام إلى ${email}. أدخل الرمز أدناه للتحقق من حسابك.`;
+                startResendTimer();
+                // Focus on the leftmost box (last in DOM for RTL)
+                codeInputs[codeInputs.length - 1].focus();
+            } else {
+                showError('لم يتم العثور على بريد إلكتروني. يرجى التسجيل مرة أخرى.');
+                verifyForm.style.display = 'none';
+            }
+        });
+
+        // إدارة إدخال الرمز (RTL aware)
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.inputType === 'insertText' && input.value) {
+                    // Move to next box (left in DOM - right visually)
+                    if (index > 0) {
+                        codeInputs[index - 1].focus();
+                    }
+                }
+                errorMsg.style.display = 'none';
             });
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value) {
+                    // Move to previous box (right in DOM - left visually)
+                    if (index < codeInputs.length - 1) {
+                        codeInputs[index + 1].focus();
+                    }
+                }
+            });
+            
+            // السماح بالأرقام فقط
+            input.addEventListener('keypress', (e) => {
+                if (e.key < '0' || e.key > '9') {
+                    e.preventDefault();
+                }
+            });
+        });
 
-            const data = await response.json();
+        // إرسال النموذج
+        verifyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // جمع الأرقام من اليسار لليمين (visually)
+            const verificationCode = Array.from(codeInputs).reverse().map(input => input.value).join('');
+            const email = userEmailInput.value;
 
-            if (!response.ok) {
-                throw new Error(data.message || 'حدث خطأ أثناء إعادة الإرسال');
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = '...جاري التحقق';
+                
+                const response = await fetch('http://localhost:5000/api/auth/verify-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        email: email,
+                        verificationCode: verificationCode 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Verification failed');
+                }
+
+                showSuccess(data.message || 'تم التحقق بنجاح!');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+
+            } catch (error) {
+                showError(error.message);
+                codeInputs.forEach(input => input.value = '');
+                codeInputs[codeInputs.length - 1].focus(); // Focus on leftmost box
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'تأكيد';
+            }
+        });
+
+        // إعادة إرسال الرمز
+        resendLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = userEmailInput.value;
+
+            if (!email) {
+                showError('الرجاء إدخال البريد الإلكتروني أولاً');
+                return;
             }
 
-            showSuccess('تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني');
-        } catch (error) {
-            showError(error.message);
-            resendLink.style.display = 'inline';
-            resendTimer.style.display = 'none';
-        }
-    });
+            try {
+                resendLink.style.display = 'none';
+                resendTimer.style.display = 'block';
+                startResendTimer();
+                
+                const response = await fetch('http://localhost:5000/api/auth/resend-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
 
-    // وظائف مساعدة
-    function showError(message) {
-        errorMsg.style.display = 'block';
-        errorMsg.innerHTML = message;
-        successMsg.style.display = 'none';
-    
-        // إضافة هذه السطور لتفادي الخلط بين 4 و6 أرقام
-        if (message.includes("Verification code")) {
-            errorMsg.innerHTML += "<br>الرجاء التأكد من إدخال الرمز المكون من 4 أرقام الذي استلمته";
-        }
-    }
+                const data = await response.json();
 
-    function showSuccess(message) {
-        successMsg.style.display = 'block';
-        successMsg.textContent = message;
-        errorMsg.style.display = 'none';
-    }
+                if (!response.ok) {
+                    throw new Error(data.message || 'حدث خطأ أثناء إعادة الإرسال');
+                }
 
-    function startResendTimer() {
-        let timeLeft = 60;
-        resendLink.style.display = 'none';
-        resendTimer.style.display = 'block';
-        
-        const timer = setInterval(() => {
-            countdownEl.textContent = timeLeft;
-            timeLeft--;
-            
-            if (timeLeft < 0) {
-                clearInterval(timer);
+                showSuccess('تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني');
+            } catch (error) {
+                showError(error.message);
                 resendLink.style.display = 'inline';
                 resendTimer.style.display = 'none';
             }
-        }, 1000);
-    }
-</script>
+        });
 
+        // وظائف مساعدة
+        function showError(message) {
+            errorMsg.style.display = 'block';
+            errorMsg.textContent = message;
+            successMsg.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMsg.style.display = 'block';
+            successMsg.textContent = message;
+            errorMsg.style.display = 'none';
+        }
+
+        function startResendTimer() {
+            let timeLeft = 60;
+            resendLink.style.display = 'none';
+            resendTimer.style.display = 'block';
+            
+            const timer = setInterval(() => {
+                countdownEl.textContent = timeLeft;
+                timeLeft--;
+                
+                if (timeLeft < 0) {
+                    clearInterval(timer);
+                    resendLink.style.display = 'inline';
+                    resendTimer.style.display = 'none';
+                }
+            }, 1000);
+        }
+    </script>
 </body>
 </html>

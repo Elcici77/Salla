@@ -1,0 +1,2 @@
+name: zender_db
+collection: utf8b4_genral_ci

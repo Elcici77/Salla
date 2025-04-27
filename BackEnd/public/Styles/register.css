@@ -3,278 +3,225 @@
     src: url('../Fonts/HONORSansArabicUI-DB.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
+    /* font-display: swap; */
 }
 
 /* General styling */
-body {
+* {
+    box-sizing: border-box;
     margin: 0;
+    padding: 0;
+}
+
+body {
     font-family: 'HONORSansArabicUI-DB', sans-serif;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background: #ffffff;
+    overflow-x: hidden;
 }
 
 /* Logo styling */
 .logo {
-    position: absolute;
-    top: 20px;
-    right: 40px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #007BFF;
+    position: fixed;
+    top: 30px;
+    right: 235px;
+    z-index: 100;
 }
 
-/* Left side (image section) */
+.logo img {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Layout */
 .left-side {
-    width: 50%;
+    flex: 1;
+    display: flex;
+    background: #94A8B1;
+    justify-content: flex-start; /* تغيير من center إلى flex-start */
+    align-items: center; /* للحفاظ على الانتظام العمودي */
+    padding-left: 0; /* إزالة أي بادنج من اليسار */
 }
 
 .left-side img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* بدلاً من cover للحفاظ على النسب */
+    image-rendering: -webkit-optimize-contrast; /* تحسين العرض */
+    image-rendering: crisp-edges;
+    margin-left: 2%; /* التأكد من عدم وجود هوامش على اليسار */
+    margin-right: auto; /* دفع الصورة لليسار */
 }
 
-/* Right side (form section) */
 .right-side {
-    width: 50%;
-    padding: 40px;
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 40px 20px;
     background: #fff;
     position: relative;
 }
 
-/* Switch buttons for Login/Register */
+/* Switch buttons */
 .switch-buttons {
     display: flex;
-    justify-content: center;
-    width: 80%;
-    margin-bottom: 8%;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 50px;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .switch-buttons button {
     flex: 1;
-    padding: 10px;
-    border: none;
+    padding: 12px;
+    border: 1PX solid #34C435;
     cursor: pointer;
     font-size: 16px;
-    transition: 0.3s;
-    border-radius: 0;
-    font-family: 'HONORSansArabicUI-DB', sans-serif;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    background: #ffffff;
+    color: #333;
+   
+}
+
+#loginButton{
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
 }
 
 .switch-buttons .active {
-    background: #007BFF;
+    background: #34C435;
     color: white;
 }
 
-.switch-buttons button:not(.active) {
-    background: #ddd;
-}
-
 .switch-buttons button:hover {
-    background: #0056b3;
+    background: #34C435;
     color: white;
 }
 
 /* Form styling */
-.login-form, .register-form {
-    width: 80%;
+.register-form {
+    width: 100%;
+    max-width: 500px;
 }
 
-/* Animated input fields */
+/* Input fields - General */
 .input-group {
     position: relative;
-    margin-bottom: 5%;
+    margin-bottom: 50px;
+    width: 100%;
 }
 
 .input-group input {
-    width: 100%;  /* Make sure all inputs take up the full width */
-    padding: 10px;
-    border: 1px solid #ccc;
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ddd;
     border-radius: 5px;
     outline: none;
     font-size: 16px;
-    direction: rtl;  /* Align text to the right */
-    text-align: right;  /* Align text to the right */
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background: transparent;
+    direction: rtl;
+}
+
+.input-group input:focus {
+    border-color: #34C435;
+    box-shadow: 0 0 0 2px rgba(72, 255, 0, 0.2);
 }
 
 .input-group label {
     position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    transition: 0.3s;
-    background: white;
+    right: 15px;
+    top: 15px;
+    transition: all 0.3s ease;
+    color: #999;
+    pointer-events: none;
+    background: transparent;
     padding: 0 5px;
-    color: #888;
-    direction: rtl;  /* Align label text to the right */
+    font-size: 16px;
 }
 
-/* Animation effect for labels when focused or valid */
 .input-group input:focus + label,
-.input-group input:valid + label {
+.input-group input:not(:placeholder-shown) + label {
     top: -10px;
     font-size: 12px;
-    color: #007BFF;
+    color: #34C435;
+    background: #fff;
 }
 
-/* Phone input label animation */
-.phone-input {
-    position: relative;
-    margin-bottom: 5%; /* Add margin to space out fields */
-}
-
-.phone-input input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    outline: none;
-    font-size: 16px;
-    direction: rtl;
-    text-align: right;
-}
-
-/* Label inside the phone input field */
-.phone-input label {
+/* Password field - Desktop */
+.password-toggle {
     position: absolute;
+    left: 10px;
     top: 50%;
-    right: 10px;
     transform: translateY(-50%);
-    background: white;
-    padding: 0 5px;
-    color: #888;
-    font-size: 16px;
-    transition: 0.3s;
-    pointer-events: none; /* Prevent label from blocking input */
-    opacity: 1;
-}
-
-/* Animation effect for the phone label when focused or valid */
-.phone-input input:focus + label,
-.phone-input input:valid + label {
-    top: -10px;
-    font-size: 12px;
-    color: #007BFF;
-}
-
-/* Options (Remember me & Forgot password) */
-.options {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
     display: flex;
-    justify-content: space-between;
-    margin-top: 3%;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    z-index: 2;
 }
 
-.options a {
-    text-decoration: none;
-    color: #007BFF;
+.eye-icon {
+    width: 20px;
+    height: 20px;
+    transition: all 0.3s;
 }
 
-/* Submit button */
-button {
+/* Phone input - Desktop */
+.phone-input .iti {
     width: 100%;
-    padding: 10px;
-    margin-top: 15px;
-    background: #007BFF;
+    direction: ltr;
+}
+
+/* Hide labels when input has value */
+#password:not(:placeholder-shown) + .floating-label {
+    display: block;
+}
+
+
+#password:focus + .floating-label {
+    color: #52E964;
+}
+
+.phone-input .iti__selected-flag {
+    padding: 0 10px;
+    z-index: 2;
+}
+
+/* Button */
+button[type="submit"] {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    background: #46e246;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
+    font-family: inherit;
+    transition: all 0.3s ease;
 }
 
-button:hover {
-    background: #0056b3;
+button[type="submit"]:hover {
+    background: #52E964;
 }
 
-/* 📱 Mobile Responsive Design */
-@media (max-width: 768px) {
-    .left-side {
-        display: none; /* Hide the image section on small screens */
-    }
-
-    .right-side {
-        width: 100%;
-        padding: 20px;
-    }
-
-    .switch-buttons {
-        flex-direction: row;
-    }
-
-    .switch-buttons button {
-        flex: 1;
-    }
-    .phone-input label{
-        font-size: 15px;
-    }
-}
-
-@media (max-width: 480px) {
-    .login-form, .register-form {
-        width: 100%;
-    }
-    .phone-input label{
-        font-size: 0px;
-    }
-}
-
-/* Password input with toggle icon */
-.password-container {
-    position: relative;
-}
-
-.password-container input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    outline: none;
-    font-size: 16px;
-    direction: rtl;
-    text-align: right;
-}
-
-.password-container .show-password {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 18px;
-    cursor: pointer;
-}
-
-/* Country code select box */
-/* Phone input styling */
-/* Phone input field style (same as the other input fields) */
-.phone-input input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    outline: none;
-    font-size: 16px;
-    direction: rtl;
-    text-align: right;
-}
-
-/* Ensure the placeholder does not animate (since it's not used) */
-.phone-input input::placeholder {
-    visibility: hidden;  /* Remove the placeholder */
-}
-
-.phone-input input:focus + label {
-    opacity: 0;
-}
-
-/* Loading spinner styles */
+/* Loading spinner */
 .loading {
+    display: none;
     text-align: center;
     margin-top: 20px;
 }
@@ -282,7 +229,7 @@ button:hover {
 .spinner {
     border: 4px solid rgba(0, 0, 0, 0.1);
     border-radius: 50%;
-    border-top: 4px solid #3498db;
+    border-top: 4px solid #52E964;
     width: 30px;
     height: 30px;
     animation: spin 1s linear infinite;
@@ -292,4 +239,152 @@ button:hover {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+ /* إضافة أنماط التحقق من الصحة */
+ .validation-message {
+    display: none;
+    font-size: 12px;
+    margin-top: 5px;
+    color: #ff4444;
+    text-align: right;
+}
+
+.validation-message.valid {
+    color: #00C851;
+}
+
+.password-requirements {
+    display: none;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+}
+
+.password-requirements p {
+    margin: 5px 0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.password-requirements p:before {
+    content: "✖";
+    margin-left: 5px;
+    color: #ff4444;
+}
+
+.password-requirements p.valid:before {
+    content: "✔";
+    color: #00C851;
+}
+
+.phone-validation {
+    margin-top: 5px;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .left-side {
+        display: none;
+    }
+    
+    .right-side {
+        padding: 80px 20px 20px;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .logo {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+
+    .logo img {
+        height: 50px; /* تصغير حجم الشعار قليلاً للهواتف */
+    }
+}
+
+@media (max-width: 576px) {
+    .input-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .input-group label {
+        position: static !important;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #333;
+        transform: none !important;
+        padding: 0 !important;
+        order: -1;
+    }
+    
+    .input-group input {
+        padding: 12px;
+        order: 1;
+    }
+    
+    .input-group input:focus + label,
+    .input-group input:not(:placeholder-shown) + label {
+        position: static !important;
+        font-size: 14px;
+        color: #333;
+        background: transparent;
+        transform: none !important;
+    }
+    
+    /* Password container in mobile */
+    .password-container {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .password-container label {
+        order: -1;
+        margin-bottom: 8px;
+        position: static !important;
+    }
+    
+    .password-container input {
+        order: 1;
+    }
+    
+    .password-toggle {
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    /* Phone input in mobile */
+    .phone-input {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    
+    .phone-input .iti {
+        order: 1;
+    }
+    
+    .switch-buttons {
+        margin-bottom: 20px;
+    }
+    
+    .switch-buttons button {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    button[type="submit"] {
+        padding: 12px;
+    }
 }

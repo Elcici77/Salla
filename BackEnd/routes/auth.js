@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { pool, query } = require('../db');
+const { parsePhoneNumberFromString } = require('libphonenumber-js');
 const router = express.Router();
 
 require('dotenv').config();
@@ -18,13 +19,91 @@ router.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+/**
+ * تحقق من صحة رقم الهاتف باستخدام libphonenumber-js
+ * @param {string} phone - رقم الهاتف المدخل
+ * @param {string} countryCode - كود الدولة الافتراضي (مثال: 'EG' لمصر)
+ * @returns {boolean} - هل الرقم صحيح أم لا
+ */
+function validatePhoneNumber(phone, countryCode = 'EG') {
+    try {
+        const phoneNumber = parsePhoneNumberFromString(phone, countryCode);
+        
+        if (!phoneNumber) {
+            return false;
+        }
+        
+        return phoneNumber.isValid();
+    } catch (error) {
+        console.error('Phone validation error:', error);
+        return false;
+    }
+}
+
+/**
+ * الحصول على معلومات مفصلة عن رقم الهاتف
+ * @param {string} phone - رقم الهاتف المدخل
+ * @param {string} countryCode - كود الدولة الافتراضي
+ * @returns {object} - معلومات الرقم أو null إذا كان غير صالح
+ */
+function getPhoneNumberInfo(phone, countryCode = 'EG') {
+    try {
+        const phoneNumber = parsePhoneNumberFromString(phone, countryCode);
+        
+        if (!phoneNumber || !phoneNumber.isValid()) {
+            return null;
+        }
+        
+        return {
+            isValid: true,
+            country: phoneNumber.country,
+            countryCallingCode: phoneNumber.countryCallingCode,
+            nationalNumber: phoneNumber.nationalNumber,
+            formatInternational: phoneNumber.formatInternational(),
+            formatNational: phoneNumber.formatNational(),
+            type: phoneNumber.getType()
+        };
+    } catch (error) {
+        console.error('Phone info error:', error);
+        return null;
+    }
+}
+
+/**
+ * التحقق من قوة كلمة المرور
+ * @param {string} password - كلمة المرور المدخلة
+ * @returns {object} - نتيجة التحقق مع التفاصيل
+ */
+function validatePasswordStrength(password) {
+    const requirements = {
+        minLength: password.length >= 8,
+        hasUpperCase: /[A-Z]/.test(password),
+        hasLowerCase: /[a-z]/.test(password),
+        hasNumber: /[0-9]/.test(password),
+        hasSpecialChar: /[!@#$%^&*]/.test(password)
+    };
+    
+    const isValid = Object.values(requirements).every(Boolean);
+    
+    return {
+        isValid,
+        requirements,
+        strength: isValid ? 'strong' : 
+                 (password.length >= 6 ? 'medium' : 'weak')
+    };
+}
+
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE || 'gmail',
+    service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
-    }
+    },
+    tls: {
+        // لا ترفض الشهادات غير الموثوقة
+        rejectUnauthorized: false
+      }
 });
 
 // إرسال بريد التحقق
@@ -82,19 +161,152 @@ function authenticateToken(req, res, next) {
     });
 }
 
-// تسجيل مستخدم جديد
-router.post('/register', async (req, res) => {
-    const { username, email, password, phone } = req.body;
+/**
+ * @route POST /api/auth/check-phone
+ * @desc التحقق من وجود رقم الهاتف في قاعدة البيانات
+ * @access عام
+ */
+router.post('/check-phone', async (req, res) => {
+    const { phone } = req.body;
 
-    if (!username || !email || !password || !phone) {
-        return res.status(400).json({ message: "جميع الحقول مطلوبة" });
+    if (!phone) {
+        return res.status(400).json({ 
+            exists: false,
+            message: "رقم الهاتف مطلوب" 
+        });
     }
 
     try {
+        // البحث عن رقم الهاتف في قاعدة البيانات
+        const [users] = await query("SELECT * FROM users WHERE phone = ?", [phone]);
+        
+        return res.status(200).json({ 
+            exists: users.length > 0,
+            message: users.length > 0 ? "رقم الهاتف مسجل بالفعل" : "رقم الهاتف متاح"
+        });
+
+    } catch (error) {
+        console.error('Error checking phone number:', error);
+        return res.status(500).json({ 
+            exists: false,
+            message: "خطأ في التحقق من رقم الهاتف" 
+        });
+    }
+});
+
+/**
+ * @route POST /api/auth/check-email
+ * @desc التحقق من وجود البريد الإلكتروني في قاعدة البيانات
+ * @access عام
+ */
+router.post('/check-email', async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ 
+            exists: false,
+            message: "البريد الإلكتروني مطلوب" 
+        });
+    }
+
+    try {
+        // التحقق من صيغة البريد الإلكتروني أولاً
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ 
+                exists: false,
+                message: "صيغة البريد الإلكتروني غير صالحة" 
+            });
+        }
+
+        // البحث عن البريد الإلكتروني في قاعدة البيانات
+        const [users] = await query("SELECT * FROM users WHERE email = ?", [email]);
+        
+        return res.status(200).json({ 
+            exists: users.length > 0,
+            message: users.length > 0 
+                ? "البريد الإلكتروني مسجل في نظامنا" 
+                : "البريد الإلكتروني غير مسجل"
+        });
+
+    } catch (error) {
+        console.error('Error checking email:', error);
+        return res.status(500).json({ 
+            exists: false,
+            message: "خطأ في التحقق من البريد الإلكتروني" 
+        });
+    }
+});
+
+// تسجيل مستخدم جديد
+router.post('/register', async (req, res) => {
+    const { username, email, password, phone, countryCode = 'EG' } = req.body;
+
+    // التحقق من الحقول المطلوبة
+    if (!username || !email || !password || !phone) {
+        return res.status(400).json({ 
+            success: false,
+            message: "جميع الحقول مطلوبة" 
+        });
+    }
+
+    try {
+        // التحقق من صحة البريد الإلكتروني
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ 
+                success: false,
+                message: "صيغة البريد الإلكتروني غير صالحة" 
+            });
+        }
+
+        // التحقق من قوة كلمة المرور باستخدام الدالة الجديدة
+        const passwordCheck = validatePasswordStrength(password);
+        if (!passwordCheck.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: "كلمة المرور ضعيفة",
+                requirements: {
+                    minLength: "يجب أن تكون 8 أحرف على الأقل",
+                    hasUpperCase: "يجب أن تحتوي على حرف كبير واحد على الأقل",
+                    hasLowerCase: "يجب أن تحتوي على حرف صغير واحد على الأقل",
+                    hasNumber: "يجب أن تحتوي على رقم واحد على الأقل",
+                    hasSpecialChar: "يجب أن تحتوي على حرف خاص (!@#$%^&*)"
+                },
+                missingRequirements: Object.entries(passwordCheck.requirements)
+                    .filter(([_, met]) => !met)
+                    .map(([req]) => req)
+            });
+        }
+
+        // التحقق من صحة رقم الهاتف باستخدام الدالة الجديدة
+        if (!validatePhoneNumber(phone, countryCode)) {
+            const phoneInfo = parsePhoneNumberFromString(phone, countryCode);
+            return res.status(400).json({ 
+                success: false,
+                message: "رقم الهاتف غير صالح",
+                suggestion: phoneInfo ? `هل تقصد ${phoneInfo.formatInternational()}؟` : null
+            });
+        }
+
         // التحقق من وجود البريد الإلكتروني
-        const [existingUsers] = await query("SELECT * FROM users WHERE email = ?", [email]);
-        if (existingUsers.length > 0) {
-            return res.status(409).json({ message: "البريد الإلكتروني مستخدم بالفعل" });
+        const [existingEmails] = await query("SELECT * FROM users WHERE email = ?", [email]);
+        if (existingEmails.length > 0) {
+            return res.status(409).json({ 
+                success: false,
+                message: "البريد الإلكتروني مستخدم بالفعل",
+                suggestion: "هل نسيت كلمة المرور؟ يمكنك استعادتها من صفحة تسجيل الدخول"
+            });
+        }
+
+        // التحقق من وجود رقم الهاتف
+        const [existingPhones] = await query("SELECT * FROM users WHERE phone = ?", [phone]);
+        if (existingPhones.length > 0) {
+            return res.status(409).json({ 
+                success: false,
+                message: "رقم الهاتف مستخدم بالفعل",
+                suggestion: "إذا كان هذا رقمك، حاول تسجيل الدخول بدلاً من التسجيل"
+            });
         }
 
         // تشفير كلمة المرور
@@ -118,21 +330,28 @@ router.post('/register', async (req, res) => {
             { expiresIn: '1h' }
         );
 
-        console.log('Token created with userId:', result.insertId);
-
         // إرسال بريد التحقق
         await sendVerificationEmail(email, verificationCode);
 
         return res.status(201).json({
+            success: true,
             message: "تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.",
-            token
+            token,
+            userId: result.insertId,
+            userInfo: {
+                username,
+                email,
+                phone: parsePhoneNumberFromString(phone, countryCode)?.formatInternational()
+            }
         });
 
     } catch (error) {
         console.error('Registration error:', error);
         return res.status(500).json({ 
+            success: false,
             message: "خطأ في الخادم",
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            systemSuggestion: "يرجى المحاولة مرة أخرى بعد قليل أو التواصل مع الدعم الفني"
         });
     }
 });
@@ -300,8 +519,6 @@ router.post('/resend-code', async (req, res) => {
     }
 });
 
-// أضف هذه الدوال في ملف auth.js
-
 /**
  * @route POST /forgot-password
  * @desc إرسال رمز استعادة كلمة المرور
@@ -319,13 +536,36 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     try {
+        // التحقق من صيغة البريد الإلكتروني
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ 
+                success: false,
+                message: "صيغة البريد الإلكتروني غير صالحة"
+            });
+        }
+
         // البحث عن المستخدم في قاعدة البيانات
-        const [user] = await query("SELECT * FROM users WHERE email = ?", [email]);
+        const [users] = await query("SELECT * FROM users WHERE email = ?", [email]);
         
-        if (!user) {
+        if (users.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "لا يوجد حساب مرتبط بهذا البريد الإلكتروني"
+            });
+        }
+
+        const user = users[0];
+
+        // التحقق من وقت آخر إرسال (منع الإرسال المتكرر)
+        const lastSent = new Date(user.last_code_sent || 0);
+        const now = new Date();
+        const diffMinutes = (now - lastSent) / (1000 * 60);
+
+        if (diffMinutes < 2) { // انتظر دقيقتين بين كل إرسال
+            return res.status(429).json({
+                success: false,
+                message: "يجب الانتظار دقيقتين قبل إعادة المحاولة"
             });
         }
 
@@ -336,8 +576,8 @@ router.post('/forgot-password', async (req, res) => {
 
         // تحديث بيانات المستخدم في قاعدة البيانات
         await query(
-            "UPDATE users SET reset_code = ?, reset_token_expiry = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE email = ?",
-            [resetCode, email]
+            "UPDATE users SET reset_code = ?, reset_token = ?, reset_token_expiry = DATE_ADD(NOW(), INTERVAL 1 HOUR), last_code_sent = NOW() WHERE email = ?",
+            [resetCode, resetToken, email]
         );
 
         // إرسال البريد الإلكتروني
@@ -356,34 +596,41 @@ router.post('/forgot-password', async (req, res) => {
             message: "حدث خطأ أثناء محاولة استعادة كلمة المرور"
         });
     }
-});
+});;
 
 // دالة إرسال بريد الاستعادة
 async function sendPasswordResetEmail(email, resetCode) {
     try {
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"دعم واتس سلة" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: 'استعادة كلمة المرور',
+            subject: 'استعادة كلمة المرور - واتس سلة',
             html: `
-                <div style="font-family: 'HONORSansArabicUI-DB', sans-serif; text-align: right; direction: rtl;">
-                    <h2 style="color: #007BFF;">استعادة كلمة المرور</h2>
-                    <p>لقد تلقيت طلبًا لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
+                <div style="font-family: 'Arial', sans-serif; text-align: right; direction: rtl; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 5px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img src="https://yourdomain.com/logo.png" alt="شعار واتس سلة" style="height: 60px;">
+                    </div>
+                    <h2 style="color: #34C435;">استعادة كلمة المرور</h2>
+                    <p>مرحباً،</p>
+                    <p>لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
                     <p>رمز الاستعادة الخاص بك هو:</p>
-                    <div style="font-size: 24px; font-weight: bold; margin: 20px 0; padding: 10px; background: #f5f5f5; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; margin: 20px 0; padding: 15px; background: #f5f5f5; text-align: center; letter-spacing: 5px; color: #333;">
                         ${resetCode}
                     </div>
-                    <p>هذا الرمز صالح لمدة ساعة واحدة فقط.</p>
-                    <p>إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد.</p>
+                    <p style="color: #888;">هذا الرمز صالح لمدة ساعة واحدة فقط.</p>
+                    <p>إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد أو التواصل مع الدعم الفني.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #999;">© ${new Date().getFullYear()} واتس سلة. جميع الحقوق محفوظة.</p>
                 </div>
             `
         };
 
-        await transporter.sendMail(mailOptions);
-        console.log('تم إرسال بريد استعادة كلمة المرور إلى:', email);
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`تم إرسال بريد استعادة كلمة المرور إلى: ${email}`, info.messageId);
+        return true;
     } catch (error) {
         console.error('خطأ في إرسال البريد الإلكتروني:', error);
-        throw error;
+        throw new Error('فشل إرسال بريد الاستعادة');
     }
 }
 
@@ -429,22 +676,34 @@ setInterval(cleanupExpiredTokens, 3600000);
 router.post('/verify-reset-code', async (req, res) => {
     const { email, resetCode } = req.body;
 
+    if (!email || !resetCode) {
+        return res.status(400).json({
+            success: false,
+            message: "البريد الإلكتروني ورمز التحقق مطلوبان"
+        });
+    }
+
     try {
         // استعلام معدل للتحقق من الصلاحية
-        const [user] = await query(
+        const [users] = await query(
             "SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_token_expiry > NOW()",
             [email, resetCode]
         );
 
-        if (!user) {
-            // إضافة سجلات للتصحيح
+        if (users.length === 0) {
+            // تسجيل تفاصيل الخطأ للتصحيح
             const [dbUser] = await query(
                 "SELECT reset_code, reset_token_expiry FROM users WHERE email = ?",
                 [email]
             );
-            console.log('رمز التحقق في DB:', dbUser.reset_code);
-            console.log('وقت الانتهاء في DB:', dbUser.reset_token_expiry);
-            console.log('الوقت الحالي:', new Date());
+            
+            console.log('تفاصيل الخطأ:', {
+                email,
+                providedCode: resetCode,
+                dbCode: dbUser[0]?.reset_code,
+                dbExpiry: dbUser[0]?.reset_token_expiry,
+                currentTime: new Date()
+            });
             
             return res.status(400).json({
                 success: false,
@@ -452,9 +711,17 @@ router.post('/verify-reset-code', async (req, res) => {
             });
         }
 
+        // إنشاء توكن مؤقت لإعادة التعيين
+        const tempToken = jwt.sign(
+            { email, resetCode },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
         return res.status(200).json({
             success: true,
-            message: "تم التحقق من رمز الاستعادة بنجاح"
+            message: "تم التحقق من رمز الاستعادة بنجاح",
+            tempToken
         });
 
     } catch (error) {
@@ -464,7 +731,7 @@ router.post('/verify-reset-code', async (req, res) => {
             message: "حدث خطأ أثناء التحقق من رمز الاستعادة"
         });
     }
-});
+});;
 
 /**
  * @route POST /reset-password
@@ -472,16 +739,45 @@ router.post('/verify-reset-code', async (req, res) => {
  * @access عام
  */
 router.post('/reset-password', async (req, res) => {
-    const { email, resetCode, newPassword } = req.body;
+    const { email, resetCode, newPassword, tempToken } = req.body;
+
+    if (!email || !resetCode || !newPassword) {
+        return res.status(400).json({
+            success: false,
+            message: "جميع الحقول مطلوبة"
+        });
+    }
 
     try {
+        // التحقق من التوكن المؤقت إذا تم إرساله
+        if (tempToken) {
+            jwt.verify(tempToken, process.env.JWT_SECRET, (err) => {
+                if (err) {
+                    return res.status(401).json({
+                        success: false,
+                        message: "انتهت صلاحية جلسة الاستعادة، يرجى البدء من جديد"
+                    });
+                }
+            });
+        }
+
+        // التحقق من قوة كلمة المرور الجديدة
+        const passwordCheck = validatePasswordStrength(newPassword);
+        if (!passwordCheck.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: "كلمة المرور الجديدة ضعيفة",
+                requirements: passwordCheck.requirements
+            });
+        }
+
         // التحقق من رمز الاستعادة أولاً
-        const [user] = await query(
-            "SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_token_expiry > ?",
-            [email, resetCode, Date.now()]
+        const [users] = await query(
+            "SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_token_expiry > NOW()",
+            [email, resetCode]
         );
 
-        if (!user) {
+        if (users.length === 0) {
             return res.status(400).json({
                 success: false,
                 message: "رمز التحقق غير صحيح أو منتهي الصلاحية"
@@ -497,6 +793,9 @@ router.post('/reset-password', async (req, res) => {
             [hashedPassword, email]
         );
 
+        // إرسال بريد التأكيد
+        await sendPasswordChangeConfirmation(email);
+
         return res.status(200).json({
             success: true,
             message: "تم تحديث كلمة المرور بنجاح"
@@ -510,6 +809,35 @@ router.post('/reset-password', async (req, res) => {
         });
     }
 });
+
+// دالة إرسال تأكيد تغيير كلمة المرور
+async function sendPasswordChangeConfirmation(email) {
+    try {
+        const mailOptions = {
+            from: `"دعم واتس سلة" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'تم تغيير كلمة المرور بنجاح - واتس سلة',
+            html: `
+                <div style="font-family: 'Arial', sans-serif; text-align: right; direction: rtl; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 5px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img src="logo.png" alt="شعار واتس سلة" style="height: 60px;">
+                    </div>
+                    <h2 style="color: #34C435;">تم تغيير كلمة المرور</h2>
+                    <p>مرحباً،</p>
+                    <p>تم تغيير كلمة المرور الخاصة بحسابك بنجاح.</p>
+                    <p>إذا لم تقم بهذا التغيير، يرجى التواصل مع الدعم الفني فوراً.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #999;">© ${new Date().getFullYear()} واتس سلة. جميع الحقوق محفوظة.</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`تم إرسال تأكيد تغيير كلمة المرور إلى: ${email}`);
+    } catch (error) {
+        console.error('خطأ في إرسال بريد التأكيد:', error);
+    }
+}
 
 router.get('/user-info', authenticateToken, async (req, res) => {
     try {
