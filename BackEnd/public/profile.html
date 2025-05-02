@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الملف الشخصي</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="Styles/dashboard.css">
+    <link rel="preload" href="Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
+</head>
+<body>
+    
+    <div id="included-navbar"></div>
+    <div id="included-sidebar"></div>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="profile-container">
+            <h1><i class="fas fa-user-circle"></i> الملف الشخصي</h1>
+
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="avatar-upload">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <img id="profileImage" src="https://via.placeholder.com/150" alt="صورة البروفايل">
+                        </div>
+                        <div class="upload-controls">
+                            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                            <button class="upload-btn" onclick="document.getElementById('avatarInput').click()">
+                                <i class="fas fa-camera"></i> تغيير الصورة
+                            </button>
+                            <button class="remove-btn" id="removeAvatarBtn">
+                                <i class="fas fa-trash"></i> إزالة الصورة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-form">
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="username"><i class="fas fa-user"></i> اسم المستخدم</label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                            <input type="email" id="email" name="email" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone"><i class="fas fa-phone"></i> رقم الهاتف</label>
+                            <input type="tel" id="phone" name="phone">
+                            <div id="phone-validation" class="validation-msg"></div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="save-btn">
+                                <i class="fas fa-save"></i> حفظ التغييرات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        fetch("navbar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("included-navbar").innerHTML = data;
+    
+                // تأكد من تشغيل الدوال بعد إدراج عناصر الـ Navbar
+                const tempToken = localStorage.getItem('tempAuthToken');
+                if (tempToken) {
+                    localStorage.setItem('authToken', tempToken);
+                    localStorage.removeItem('tempAuthToken');
+                }
+    
+                setupSidebar();
+                loadUserData();
+                setupStoreConnection();
+                loadConnectedStores();
+                setupDropdown();
+                setupFullpageStoresDropdown();
+                updateNavbarProfileImage();
+    
+                //  إضافة عنصر "لوحة التحكم" كأول عنصر مع فاصل خفيف في صفحة profile فقط
+                const currentPage = window.location.pathname;
+                if (currentPage.includes("profile.html")) {
+                    const dropdownMenu = document.querySelector(".dropdown-menu");
+                    if (dropdownMenu) {
+                        // عنصر "لوحة التحكم"
+                        const dashboardLink = document.createElement("a");
+                        dashboardLink.href = "dashboard.html";
+                        dashboardLink.innerHTML = '<i class="fas fa-th-large"></i> لوحة التحكــم';
+    
+                        // فاصل خفيف بعده
+                        const separator = document.createElement("div");
+                        separator.style.margin = "8px 0";
+                        separator.style.borderTop = "1px solid #ddd";
+    
+                        // إدراج العنصرين في بداية القائمة
+                        dropdownMenu.prepend(separator);
+                        dropdownMenu.prepend(dashboardLink);
+                    }
+                }
+    
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('connected') === '1') {
+                    showSuccess('تم ربط المتجر بنجاح!');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            });
+    
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("included-sidebar").innerHTML = data;
+    
+                // إذا كانت هناك وظائف أخرى للـ Sidebar تحتاج إلى التنفيذ بعد تحميله
+                setupSidebar();
+            });
+    </script>
+    
+    
+    <script src="Scripts/profile.js"></script>
+    <script src="Scripts/dashboard.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
+
+</body>
+</html>

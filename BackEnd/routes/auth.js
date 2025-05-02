@@ -7,6 +7,41 @@ const nodemailer = require('nodemailer');
 const { pool, query } = require('../db');
 const { parsePhoneNumberFromString } = require('libphonenumber-js');
 const router = express.Router();
+// ملف auth.js - الجزء الخاص بالبروفايل
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// إنشاء مجلد uploads إذا لم يكن موجوداً
+const uploadDir = path.join(__dirname, '../uploads/profiles');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// إعداد multer للتعامل مع رفع الملفات
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'profile-' + req.user.id + '-' + uniqueSuffix + ext);
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('الرجاء تحميل ملف صورة فقط'), false);
+        }
+    }
+});
+
 
 require('dotenv').config();
 
@@ -650,6 +685,232 @@ router.get('/protected', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Protected route error:', error);
         res.status(500).json({ message: "خطأ في الخادم" });
+    }
+});
+
+/**
+ * @route GET /api/user/profile
+ * @desc جلب بيانات البروفايل
+ * @access خاص (يتطلب توكن)
+ */
+router.get('/api/auth/profile', authenticateToken, async (req, res) => {
+    try {
+        const [user] = await query(
+            "SELECT ID, username, email, phone, profile_picture FROM users WHERE ID = ?",
+            [req.user.userId]
+        );
+        
+        if (!user || user.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'المستخدم غير موجود' 
+            });
+        }
+        
+        const userData = user[0];
+        res.json({ 
+            success: true,
+            id: userData.ID,
+            username: userData.username,
+            email: userData.email,
+            phone: userData.phone,
+            profile_picture: userData.profile_picture 
+                ? `/uploads/profiles/${userData.profile_picture}`
+                : null
+        });
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'حدث خطأ في السيرفر' 
+        });
+    }
+});
+
+/**
+ * @route PUT /api/user/update-profile
+ * @desc تحديث بيانات البروفايل
+ * @access خاص (يتطلب توكن)
+ */
+router.put('/api/auth/update-profile', authenticateToken, async (req, res) => {
+    try {
+        const { username, phone } = req.body;
+        
+        // التحقق من البيانات المدخلة
+        if (!username && !phone) {
+            return res.status(400).json({
+                success: false,
+                message: 'يجب تقديم بيانات للتحديث'
+            });
+        }
+
+        // بناء استعلام التحديث ديناميكياً
+        let updateQuery = "UPDATE users SET ";
+        const updateParams = [];
+        
+        if (username) {
+            updateQuery += "username = ?, ";
+            updateParams.push(username);
+        }
+        
+        if (phone) {
+            // التحقق من صحة رقم الهاتف
+            if (!validatePhoneNumber(phone)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'رقم الهاتف غير صالح'
+                });
+            }
+            updateQuery += "phone = ?, ";
+            updateParams.push(phone);
+        }
+        
+        // إزالة الفاصلة الأخيرة وإضافة شرط WHERE
+        updateQuery = updateQuery.slice(0, -2) + " WHERE ID = ?";
+        updateParams.push(req.user.userId);
+        
+        // تنفيذ الاستعلام
+        await query(updateQuery, updateParams);
+        
+        // جلب البيانات المحدثة
+        const [updatedUser] = await query(
+            "SELECT username, phone FROM users WHERE ID = ?",
+            [req.user.userId]
+        );
+        
+        res.json({ 
+            success: true,
+            message: 'تم تحديث البيانات بنجاح',
+            username: updatedUser[0].username,
+            phone: updatedUser[0].phone
+        });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'حدث خطأ في السيرفر' 
+        });
+    }
+});
+
+
+/**
+ * @route POST /api/user/upload-avatar
+ * @desc رفع صورة البروفايل
+ * @access خاص (يتطلب توكن)
+ */
+router.post('/api/auth/upload-avatar', authenticateToken, upload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'الرجاء اختيار صورة صالحة' 
+            });
+        }
+        
+        // جلب بيانات المستخدم الحالية
+        const [user] = await query(
+            "SELECT profile_picture FROM users WHERE ID = ?",
+            [req.user.userId]
+        );
+        
+        if (!user || user.length === 0) {
+            // حذف الصورة المرفوعة إذا فشلت العملية
+            fs.unlinkSync(req.file.path);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'المستخدم غير موجود' 
+            });
+        }
+        
+        const currentUser = user[0];
+        
+        // حذف الصورة القديمة إذا كانت موجودة
+        if (currentUser.profile_picture) {
+            const oldImagePath = path.join(uploadDir, currentUser.profile_picture);
+            if (fs.existsSync(oldImagePath)) {
+                fs.unlinkSync(oldImagePath);
+            }
+        }
+        
+        // تحديث قاعدة البيانات باسم الملف الجديد
+        await query(
+            "UPDATE users SET profile_picture = ? WHERE ID = ?",
+            [req.file.filename, req.user.userId]
+        );
+        
+        res.json({ 
+            success: true,
+            message: 'تم تحديث الصورة بنجاح',
+            filename: req.file.filename,
+            profile_url: `/uploads/profiles/${req.file.filename}`
+        });
+    } catch (error) {
+        console.error('Error uploading avatar:', error);
+        
+        // حذف الصورة المرفوعة إذا حدث خطأ
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'حدث خطأ أثناء رفع الصورة' 
+        });
+    }
+});
+
+/**
+ * @route DELETE /api/user/remove-avatar
+ * @desc إزالة صورة البروفايل
+ * @access خاص (يتطلب توكن)
+ */
+router.delete('/api/auth/remove-avatar', authenticateToken, async (req, res) => {
+    try {
+        // جلب بيانات المستخدم الحالية
+        const [user] = await query(
+            "SELECT profile_picture FROM users WHERE ID = ?",
+            [req.user.userId]
+        );
+        
+        if (!user || user.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'المستخدم غير موجود' 
+            });
+        }
+        
+        const currentUser = user[0];
+        
+        if (!currentUser.profile_picture) {
+            return res.json({ 
+                success: true,
+                message: 'لا توجد صورة لإزالتها' 
+            });
+        }
+        
+        // حذف الصورة من المجلد
+        const imagePath = path.join(uploadDir, currentUser.profile_picture);
+        if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+        }
+        
+        // تحديث قاعدة البيانات بإزالة اسم الملف
+        await query(
+            "UPDATE users SET profile_picture = NULL WHERE ID = ?",
+            [req.user.userId]
+        );
+        
+        res.json({ 
+            success: true,
+            message: 'تم إزالة الصورة بنجاح'
+        });
+    } catch (error) {
+        console.error('Error removing avatar:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'حدث خطأ في السيرفر' 
+        });
     }
 });
 
