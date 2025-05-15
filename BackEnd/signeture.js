@@ -1,16 +1,12 @@
 const crypto = require('crypto');
-
-const secret = '36e9127d3e3548e43147548af7fd3eeb'; // انسخه من .env
-const body = JSON.stringify({
+const secret = '36e9127d3e3548e43147548af7fd3eeb'; // استبدلها بالسر الفعلي
+const payload = JSON.stringify({
   event: "order.created",
-  data: {
-    id: 12345
-  }
+  data: { id: "TEST_123", customer: { name: "Test", mobile: "0512345678" } }
 });
 
 const signature = crypto.createHmac('sha256', secret)
-  .update(body)
-  .digest('hex');
+                      .update(payload)
+                      .digest('hex');
+console.log('X-Salla-Signature:', signature);
 
-console.log('x-salla-signature:', signature);
-console.log('Body to use in Postman:', body);

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السلات المتروكة</title>
+    <link rel="stylesheet" href="Styles/dashboard_content.css">
+    <link rel="stylesheet" href="Styles/abandoned_carts.css">
+    <link rel="stylesheet" href="Styles/sidebar.css">
+    <link rel="stylesheet" href="Styles/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="included-navbar"></div>
+    <div id="included-sidebar"></div>
+
+    <!-- محتوى الصفحة -->
+    <main class="main-content">
+        <div class="table-controls">
+            <button class="sync-button" onclick="syncAbandonedCarts()">
+                <i class="fas fa-sync"></i> مزامنة السلات المتروكة
+            </button>
+            <div class="selected-actions" id="selected-actions" style="display: none;">
+                <button class="selected-button" onclick="toggleActionsMenu()">
+                    <span id="selected-count">تم تحديد 0 عملاء</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="actions-menu" id="actions-menu" style="display: none;">
+                    <a href="#" onclick="sendBulkReminders()">إرسال تذكير للمحدد</a>
+                    <a href="#" onclick="exportToExcel()">تصدير إلى Excel</a>
+                    <a href="#" onclick="deleteSelected()">حذف المحدد</a>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2>السلات المتروكــة</h2>
+                <div class="store-select-container">
+                    <select id="store-select" style="width: 300px;"></select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="ابحث عن سلة (اسم العميل، رقم السلة)..." class="search-input">
+                </div>
+                <div class="table-container">
+                    <table class="carts-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all"></th>
+                                <th>اسم العميل</th>
+                                <th>رابط إكمال الشراء</th>
+                                <th>تاريخ استلام الحدث</th>
+                                <th>وقت الاستلام</th>
+                                <th>عمر السلة</th>
+                                <th>المنتجات</th>
+                                <th>إجمالي السلة</th>
+                                <th>الحالة</th>
+                                <th>تم التحويل؟</th>
+                                <th>خيارات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="carts-table-body"></tbody>
+                    </table>
+                    <div id="empty-state" class="empty-state" style="display: none;">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>لا توجد سلات متروكة حاليًا</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        fetch("navbar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("included-navbar").innerHTML = data;
+                const tempToken = localStorage.getItem('tempAuthToken');
+                if (tempToken) {
+                    localStorage.setItem('authToken', tempToken);
+                    localStorage.removeItem('tempAuthToken');
+                }
+                setupSidebar();
+                loadUserData();
+                setupStoreConnection();
+                loadConnectedStores();
+                setupDropdown();
+                setupFullpageStoresDropdown();
+                updateNavbarProfileImage();
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('connected') === '1') {
+                    showSuccess('تم ربط المتجر بنجاح!');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            });
+
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("included-sidebar").innerHTML = data;
+                setupSidebar();
+            });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="Scripts/dashboard.js"></script>
+    <script src="Scripts/dashboard_content.js"></script>
+    <script src="Scripts/abandoned-carts.js"></script>
+</body>
+</html>

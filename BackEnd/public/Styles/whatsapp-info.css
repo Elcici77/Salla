@@ -1,0 +1,123 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.whatsapp-connect-container {
+    width: 100%;
+    padding: 20px;
+}
+
+.whatsapp-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.connection-status i {
+    margin-left: 5px;
+    color: #00ff00;
+}
+
+#status-text{
+    color: #000;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.account-info {
+    text-align: center;
+}
+
+.connected-account {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.profile-info i {
+    font-size: 40px;
+    color: #25D366;
+    margin-left: 10px;
+}
+
+.details p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+.disconnect-btn {
+    background: #ff4444;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.disconnect-btn:hover {
+    background: #cc0000;
+}
+
+#status-msg {
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+.error-message {
+    color: #ff4444;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #25D366;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

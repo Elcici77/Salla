@@ -376,72 +376,7 @@ body {
     display: none;
 }
 
-/*Side Bar*/
-/* Sidebar Styles */
-.sidebar {
-    position: fixed;
-    top: 70px;
-    right: -300px;
-    width: 300px;
-    height: calc(100vh - 70px);
-    background-color: white;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-    transition: right 0.3s ease;
-    z-index: 998;
-    overflow-y: auto;
-}
 
-.sidebar.active {
-    right: 0;
-}
-
-.sidebar-overlay {
-    position: fixed;
-    top: 70px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 997;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.sidebar.active + .sidebar-overlay {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.sidebar-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid #eee;
-}
-
-.sidebar-nav {
-    padding: 1rem 0;
-}
-
-.sidebar-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    color: #333;
-    text-decoration: none;
-    transition: all 0.3s;
-}
-
-.sidebar-item i {
-    margin-left: 10px;
-    color: #34C435;
-    width: 20px;
-    text-align: center;
-}
-
-.sidebar-item:hover, .sidebar-item.active {
-    background-color: #f5f7fa;
-    color: #34C435;
-}
 
 /* Bottom Navigation - Mobile - تم التعديل */
 .bottom-nav {

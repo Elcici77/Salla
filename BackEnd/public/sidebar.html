@@ -5,52 +5,88 @@
         <h3>القائمة</h3>
     </div>
     <nav class="sidebar-nav">
-        <a href="#" class="sidebar-item active">
-            <i class="fas fa-home"></i>
-            <span>الرئيسية</span>
-        </a>
-        <a href="#" class="sidebar-item">
-            <i class="fas fa-envelope"></i>
-            <span>الرسائل</span>
-        </a>
-        <a href="#" class="sidebar-item">
-            <i class="fas fa-users"></i>
-            <span>العملاء</span>
-        </a>
-        <a href="#" class="sidebar-item">
-            <i class="fas fa-chart-line"></i>
-            <span>الإحصائيات</span>
-        </a>
-        <a href="#" class="sidebar-item">
-            <i class="fas fa-cog"></i>
-            <span>الإعدادات</span>
-        </a>
+        <!-- قسم الرئيسية -->
+        <div class="sidebar-section">
+            <a href="/dashboard.html" class="sidebar-item">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a>
+        </div>
+
+        <!-- قسم جهات الاتصال -->
+        <div class="sidebar-section">
+            <div class="section-title">
+                <span>جهات الاتصال</span>
+                <i class="fas fa-chevron-down toggle-arrow"></i>
+            </div>
+            <div class="sub-items">
+                <a href="/customers.html" class="sidebar-item">
+                    <i class="fas fa-users"></i>
+                    <span>قائمة العملاء</span>
+                </a>
+                <a href="/blacklist.html" class="sidebar-item">
+                    <i class="fas fa-ban"></i>
+                    <span>القائمة السوداء</span>
+                </a>
+                <a href="/campaigns.html" class="sidebar-item">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>الحملات الترويجية</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- قسم السلات المتروكة -->
+        <div class="sidebar-section">
+            <a href="/abandoned-carts.html" class="sidebar-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>السلات المتروكة</span>
+            </a>
+        </div>
+
+        <!-- قسم مزامنة البيانات -->
+        <div class="sidebar-section">
+            <a href="/sync-data.html" class="sidebar-item">
+                <i class="fas fa-sync"></i>
+                <span>مزامنة البيانات</span>
+                <span class="badge badge-inactive">غير مفعلة</span>
+            </a>
+        </div>
+
+        <!-- قسم إعدادات قنوات الإرسال -->
+        <div class="sidebar-section">
+            <div class="section-title">
+                <span>إعدادات قنوات الإرسال</span>
+                <i class="fas fa-chevron-down toggle-arrow"></i>
+            </div>
+            <div class="sub-items">
+                <a href="whatsapp-qr.html" class="sidebar-item">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>ربط حساب الواتساب</span>
+                    <span class="badge badge-disconnected">غير متصل</span>
+                </a>
+                <a href="/whatsapp-widget.html" class="sidebar-item">
+                    <i class="fas fa-puzzle-piece"></i>
+                    <span>واتساب ويدجت</span>
+                </a>
+                <a href="/review-rewards.html" class="sidebar-item">
+                    <i class="fas fa-star"></i>
+                    <span>مكافآت التقييم</span>
+                </a>
+                <a href="/message-templates.html" class="sidebar-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span> قوالب الرسائل الآلية</span>
+                </a>
+                <a href="/message-mechanism.html" class="sidebar-item">
+                    <i class="fas fa-cogs"></i>
+                    <span>الرسائل المرسلة</span>
+                </a>
+                <a href="/whatsapp-salla-bot.html" class="sidebar-item">
+                    <i class="fas fa-robot"></i>
+                    <span>واتس سلة بوت</span>
+                </a>
+            </div>
+        </div>
     </nav>
 </aside>
 
-
-<!-- Bottom Navigation - Mobile -->
-<nav class="bottom-nav">
-    <div class="bottom-nav-items">
-        <a href="#" class="bottom-nav-item active">
-            <i class="fas fa-home"></i>
-            <span>الرئيسية</span>
-        </a>
-        <a href="#" class="bottom-nav-item">
-            <i class="fas fa-envelope"></i>
-            <span>الرسائل</span>
-        </a>
-        <a href="#" class="bottom-nav-item">
-            <i class="fas fa-users"></i>
-            <span>العملاء</span>
-        </a>
-        <a href="#" class="bottom-nav-item">
-            <i class="fas fa-chart-line"></i>
-            <span>الإحصائيات</span>
-        </a>
-        <a href="#" class="bottom-nav-item">
-            <i class="fas fa-cog"></i>
-            <span>الإعدادات</span>
-        </a>
-    </div>
-</nav>
+<script src="Scripts/sidebar.js"></script>

@@ -1,0 +1,376 @@
+.whatsapp-connect-container {
+    margin-top: 5%;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    min-height: calc(100vh - 120px);
+    background-color: #f5f7fa;
+}
+
+.whatsapp-card {
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 90%;
+    max-width: 900px;
+    padding: 30px;
+    direction: rtl;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.card-header h2 {
+    color: #25D366;
+    font-size: 24px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-body {
+    display: flex;
+    gap: 40px;
+}
+
+.qr-section {
+    display: flex;
+    flex: 1;
+    gap: 40px;
+}
+
+.qr-instructions {
+    flex: 1;
+    padding: 15px;
+}
+
+.qr-instructions h3 {
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.qr-instructions h3::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 50px;
+    height: 3px;
+    background-color: #25D366;
+}
+
+.qr-instructions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.qr-instructions ul li {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #555;
+}
+
+.qr-instructions ul li i {
+    color: #25D366;
+}
+
+.qr-code-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
+.qr-code {
+    width: 250px;
+    height: 250px;
+    background-color: #fff;
+    border: 2px dashed #25D366;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.qr-code img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+#status-msg {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-weight: 500;
+}
+
+.qr-loading {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #25D366;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.qr-error {
+    background-color: #ffeeee;
+    color: #ff4444;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.qr-timer {
+    background-color: #f8f9fa;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.qr-timer i {
+    margin-left: 5px;
+    color: #ff9800;
+}
+
+/* للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .card-body {
+        flex-direction: column;
+    }
+    
+    .qr-section {
+        flex-direction: column;
+    }
+    
+    .qr-code-container {
+        order: -1;
+        margin-bottom: 30px;
+    }
+}
+
+/* شريط التقدم */
+.progress-container {
+    width: 100%;
+    background-color: #f1f1f1;
+    border-radius: 10px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 10px;
+    background-color: #25D366;
+    width: 0;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { width: 0; margin-left: 0; }
+    50% { width: 100%; margin-left: 0; }
+    100% { width: 0; margin-left: 100%; }
+}
+
+@keyframes progress {
+    0% { width: 0%; }
+    50% { width: 50%; }
+    100% { width: 100%; }
+}
+
+/* قسم معلومات الحساب */
+.connected-account {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e1e1e1;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    margin: 20px 0;
+}
+
+.profile-pic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #25D366;
+}
+
+.profile-details {
+    flex: 1;
+}
+
+.profile-details p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.status-connected {
+    color: #25D366;
+    font-weight: bold;
+}
+
+.disconnect-btn {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    margin-top: 15px;
+    transition: background 0.3s;
+}
+
+.disconnect-btn:hover {
+    background: #cc0000;
+}
+
+.disconnect-btn i {
+    margin-left: 8px;
+}
+
+/* تأثيرات الانتقال */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* بطاقة الحساب المربوط */
+.account-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #25D366;
+    margin-bottom: 15px;
+}
+
+.account-header i {
+    font-size: 24px;
+}
+
+.account-details {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.account-details p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.connected {
+    color: #25D366;
+    font-weight: bold;
+}
+
+.disconnect-btn {
+    background: #ff4444;
+    color: white;
+    margin-top: 15px;
+    width: 100%;
+}
+
+/* تأثير إخفاء QR */
+#qr-section {
+    transition: opacity 0.5s ease;
+}
+
+/* حالة الاتصال */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+}
+
+.connection-status.connected {
+    color: #25D366;
+}
+
+.connection-status.disconnected {
+    color: #888;
+}
+
+/* معلومات الحساب المربوط */
+.connected-account {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.profile-info i {
+    font-size: 40px;
+    color: #25D366;
+}
+
+.details {
+    flex: 1;
+}
+
+.details .phone {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.details .connection-time {
+    color: #666;
+    font-size: 14px;
+}
+
+.disconnect-btn {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+
+.disconnect-btn:hover {
+    background: #cc0000;
+}
+
+.disconnect-btn i {
+    margin-left: 8px;
+}

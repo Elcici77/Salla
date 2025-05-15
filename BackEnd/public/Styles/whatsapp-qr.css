@@ -1,0 +1,129 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.whatsapp-connect-container {
+    width: 100%;
+    padding: 20px;
+}
+
+.whatsapp-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    background: #fff;
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+    border-bottom: #25D366 1px dashed;
+    border-top-right-radius: 20px;
+    border-top-left-radius: 20px;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.connection-status i {
+    margin-left: 5px;
+    color: #ff4444;
+}
+
+#status-text {
+    color: black;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.qr-section {
+    text-align: center;
+}
+
+.qr-instructions ul {
+    list-style: none;
+    padding: 0;
+    text-align: right;
+}
+
+.qr-instructions li {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.qr-instructions i {
+    margin-left: 5px;
+    color: #25D366;
+}
+
+.qr-code-container {
+    margin-top: 20px;
+}
+
+.qr-code {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-code img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.qr-timer {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+#status-msg {
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+.qr-error {
+    color: #ff4444;
+}
+
+.qr-loading {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #25D366;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

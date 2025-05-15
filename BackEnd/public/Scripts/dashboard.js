@@ -105,12 +105,47 @@ function setupSidebar() {
         menuToggle?.classList.remove('active');
     });
 
+    // تفعيل الرابط النشط بناءً على المسار الحالي
+    const currentPath = window.location.pathname;
     document.querySelectorAll('.sidebar-item').forEach(item => {
+        const itemPath = item.getAttribute('href');
+        if (itemPath === currentPath) {
+            item.classList.add('active');
+        }
+
+        // إضافة حدث النقر لتحديث فئة active
         item.addEventListener('click', function () {
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
             this.classList.add('active');
             sidebar.classList.remove('active');
             menuToggle?.classList.remove('active');
+        });
+    });
+
+    // إعداد الأقسام ذات الروابط المتعددة
+    setupSidebarSections();
+}
+
+// إعداد الأقسام ذات الروابط المتعددة في الشريط الجانبي
+function setupSidebarSections() {
+    const sectionTitles = document.querySelectorAll('.section-title');
+    sectionTitles.forEach(title => {
+        const subItems = title.nextElementSibling;
+        // تحديد max-height بناءً على المحتوى عند التهيئة
+        subItems.style.maxHeight = subItems.scrollHeight + 'px';
+
+        title.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const arrow = title.querySelector('.toggle-arrow');
+            if (subItems.classList.contains('collapsed')) {
+                subItems.classList.remove('collapsed');
+                arrow.classList.remove('collapsed');
+                subItems.style.maxHeight = subItems.scrollHeight + 'px';
+            } else {
+                subItems.classList.add('collapsed');
+                arrow.classList.add('collapsed');
+                subItems.style.maxHeight = '0';
+            }
         });
     });
 }
@@ -279,6 +314,7 @@ async function loadConnectedStores() {
         showError('حدث خطأ أثناء جلب المتاجر المربوطة');
     }
 }
+
 // إنشاء بطاقة متجر
 function createStoreCard(store) {
     const storeElement = document.createElement('div');
@@ -371,3 +407,12 @@ function setupFullpageStoresDropdown() {
     if (addStoreBtnEmpty) addStoreBtnEmpty.addEventListener('click', handleAddStore);
 }
 
+// بعد ربط المتجر بنجاح
+window.addEventListener('load', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('connected') === '1') {
+        loadDashboardData();
+        // إزالة المعلمة من URL
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+});

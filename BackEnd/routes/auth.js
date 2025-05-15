@@ -1136,6 +1136,22 @@ router.get('/user-info', authenticateToken, async (req, res) => {
         });
     }
 });
+
+router.post('/refresh-token', async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) return res.sendStatus(401);
+
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const accessToken = generateAccessToken({ userId: decoded.userId });
+
+        res.json({ accessToken });
+    } catch (error) {
+        console.error('Refresh token error:', error);
+        res.sendStatus(403);
+    }
+});
+
 // Route للاختبار
 router.get('/test', (req, res) => {
     res.json({ message: "مسارات المصادقة تعمل بشكل صحيح!" });

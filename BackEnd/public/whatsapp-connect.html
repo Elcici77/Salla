@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ربط حساب واتساب </title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/Styles/sidebar.css">
+    <link rel="stylesheet" href="/Styles/dashboard.css">
+    <link rel="stylesheet" href="/Styles/dashboard_content.css">
+    <link rel="stylesheet" href="/Styles/whatsapp-connect.css">
+    <link rel="preload" href="/Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="included-navbar"></div>
+    <div id="included-sidebar"></div>
+    
+    <div class="whatsapp-connect-container">
+        <div class="whatsapp-card">
+            <div class="card-header">
+                <h2><i class="fab fa-whatsapp"></i> حالة حساب واتساب</h2>
+                <div id="connection-status" class="connection-status">
+                    <i class="fas fa-circle"></i> <span id="status-text">غير متصل</span>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div id="qr-section" class="qr-section">
+                    <div class="qr-instructions">
+                        <h3>خطوات ربط الحساب</h3>
+                        <ul>
+                            <li><i class="fas fa-mobile-alt"></i> افتح تطبيق واتساب على هاتفك</li>
+                            <li><i class="fas fa-cog"></i> اذهب إلى الإعدادات > الأجهزة المرتبطة</li>
+                            <li><i class="fas fa-link"></i> اضغط على "ربط جهاز جديد"</li>
+                            <li><i class="fas fa-qrcode"></i> امسح رمز QR بالكاميرا</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="qr-code-container">
+                        <div class="qr-code" id="qrContainer"></div>
+                        <div class="qr-timer">
+                            <i class="fa fa-clock"></i> ينتهي خلال: <span id="qr-expire-timer">400</span> ثانية
+                        </div>
+                        <p id="status-msg">جاري توليد رمز QR...</p>
+                    </div>
+                </div>
+                
+                <div id="account-info" class="account-info" style="display: none;">
+                    <div class="connected-account">
+                        <div class="profile-info">
+                            <i class="fab fa-whatsapp"></i>
+                            <div class="details">
+                                <p class="phone" id="profile-phone">+20123456789</p>
+                                <p class="connection-time">متصلة منذ: <span id="connected-at"></span></p>
+                            </div>
+                        </div>
+                        <button id="disconnect-btn" class="disconnect-btn">
+                            <i class="fas fa-unlink"></i> فك الربط
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        fetch("navbar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("included-navbar").innerHTML = data;
+    
+                // تأكد من تشغيل الدوال بعد إدراج عناصر الـ Navbar
+                const tempToken = localStorage.getItem('tempAuthToken');
+                if (tempToken) {
+                    localStorage.setItem('authToken', tempToken);
+                    localStorage.removeItem('tempAuthToken');
+                }
+    
+                setupSidebar();
+                loadUserData();
+                setupStoreConnection();
+                loadConnectedStores();
+                setupDropdown();
+                setupFullpageStoresDropdown();
+                updateNavbarProfileImage();
+    
+    
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('connected') === '1') {
+                    showSuccess('تم ربط المتجر بنجاح!');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            });
+    
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("included-sidebar").innerHTML = data;
+    
+                // إذا كانت هناك وظائف أخرى للـ Sidebar تحتاج إلى التنفيذ بعد تحميله
+                setupSidebar();
+            });
+    </script>
+    <script src="/Scripts/dashboard_content.js"></script>
+    <script src="/Scripts/dashboard.js"></script>
+    <script src="Scripts/whatsapp-connect.js"></script>
+</body>
+</html>

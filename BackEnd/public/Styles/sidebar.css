@@ -1,0 +1,202 @@
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 70px;
+    right: -300px;
+    width: 300px;
+    height: calc(100vh - 70px);
+    background-color: #fff;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 998;
+    overflow-y: auto;
+}
+
+.sidebar.active {
+    right: 0;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 997;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.active + .sidebar-overlay {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #333;
+}
+
+.sidebar-nav {
+    padding: 1rem 0;
+}
+
+.sidebar-section {
+    border-bottom: 1px solid #e0e0e0; /* خط فاصل أنيق بين الأقسام */
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.section-title:hover {
+    background-color: #f5f7fa;
+}
+
+.section-title .toggle-arrow {
+    transition: transform 0.3s ease;
+}
+
+.section-title.collapsed .toggle-arrow {
+    transform: rotate(-90deg); /* تدوير السهم عند الإغلاق */
+}
+
+.sub-items {
+    max-height: 500px; /* قيمة كافية لاحتواء جميع الروابط */
+    overflow: hidden;
+    transition: max-height 0.3s ease-out; /* تأثير انزلاق سلس */
+}
+
+.sub-items.collapsed {
+    max-height: 0; /* إخفاء الروابط عند الإغلاق */
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem 0.75rem 3rem; /* مسافة أكبر من اليمين للروابط الفرعية */
+    color: #333;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.sidebar-item i {
+    margin-left: 10px;
+    color: #34C435;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* قص النص مع نقاط عند ضيق المساحة */
+    max-width: 200px; /* تحديد عرض أقصى للنص */
+}
+
+.sidebar-item:hover,
+.sidebar-item.active {
+    background-color: #f5f7fa;
+    color: #34C435;
+}
+
+.badge {
+    margin-right: auto;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-inactive {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+.badge-connected {
+    background-color: #25D366;
+    color: #fff;
+}
+
+.badge-disconnected {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.sidebar-item .badge {
+    max-width: none; /* إزالة قيد العرض للأختام */
+    text-overflow: clip; /* منع قص النص بنقاط */
+    white-space: nowrap; /* الحفاظ على النص في سطر واحد */
+    flex-shrink: 0; /* منع تقليص الأختام */
+}
+
+/* تعديلات للشاشات الصغيرة */
+@media screen and (max-width: 600px) {
+    .sidebar {
+        width: 250px;
+        right: -250px;
+    }
+
+    .sidebar.active {
+        right: 0;
+    }
+
+    .sidebar-header {
+        padding: 1rem;
+    }
+
+    .sidebar-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .section-title {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+
+    .sidebar-item {
+        padding: 0.6rem 1rem 0.6rem 2.5rem;
+        font-size: 0.9rem;
+    }
+
+    .sidebar-item i {
+        margin-left: 8px;
+        width: 18px;
+    }
+
+    .sidebar-item span {
+        max-width: 160px; /* عرض أقل على الهواتف لتجنب التداخل */
+    }
+
+    .badge {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.7rem;
+    }
+
+    .sidebar-item .badge {
+        max-width: none; /* إزالة قيد العرض على الهواتف */
+        text-overflow: clip; /* منع قص النص بنقاط */
+        white-space: nowrap; /* الحفاظ على النص في سطر واحد */
+        flex-shrink: 0; /* منع تقليص الأختام */
+    }
+}
