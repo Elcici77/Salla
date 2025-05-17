@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>  واتساب ويدجيت </title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/Styles/sidebar.css">
+    <link rel="stylesheet" href="/Styles/dashboard.css">
+    <link rel="stylesheet" href="/Styles/dashboard_content.css">
+    <link rel="stylesheet" href="/Styles/whatsapp-connect.css">
+    <link rel="preload" href="/Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="Styles/whatsapp-widget.css">
+</head>
+<body>
+    <div id="included-navbar"></div>
+    <div id="included-sidebar"></div>
+
+    <div class="container">
+        <h2>إعدادات واتساب ويدجت</h2>
+        <div class="section">
+            <h3>تخصيص واتساب ويدجت</h3>
+            <label>رقم واتساب الأعمال:</label>
+            <input type="text" id="whatsapp-number" disabled value="">
+            <label>متجر سلة:</label>
+            <select id="merchant-id">
+                <option value="">اختر متجرًا</option>
+            </select>
+            <label>موقع الأيقونة:</label>
+            <select id="icon-position">
+                <option value="bottom-right">يمين سفلي</option>
+                <option value="bottom-left">يسار سفلي</option>
+            </select>
+            <label>رسالة الترحيب:</label>
+            <input type="text" id="welcome-message" value="مرحبًا! كيف يمكننا مساعدتك؟">
+            <label>عنوان الويدجت:</label>
+            <input type="text" id="header" value="تواصل معنا عبر واتساب">
+            <label>حجم الأيقونة (بكسيل):</label>
+            <input type="number" id="icon-size" value="60">
+            <label>إزاحة الأيقونة من الأسفل (بكسيل):</label>
+            <input type="number" id="icon-offset" value="20">
+            <label>لوجو الأيقونة (اختياري):</label>
+            <input type="file" id="icon-logo" accept="image/*">
+            <div id="live-preview">
+                <h4>معاينة حية:</h4>
+                <div class="whatsapp-widget-preview" style="width: 60px; height: 60px;">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </div>
+            </div>
+            <button id="save-settings">حفظ الإعدادات</button>
+            <button id="generate-code" disabled>إنشاء ونسخ كود التضمين</button>
+            <div id="code-output" class="code-output" style="display: none;"></div>
+            <div id="error-message" class="error-message"></div>
+            <div class="instructions">
+                <h4>كيفية إضافة الويدجت إلى متجر سلة:</h4>
+                <ol>
+                    <li>سجل الدخول إلى لوحة تحكم سلة (<a href="https://salla.sa" target="_blank">salla.sa</a>).</li>
+                    <li>اذهب إلى <strong>الإعدادات</strong> > <strong>إعدادات متقدمة</strong> > <strong>إضافة كود مخصص</strong>.</li>
+                    <li>الصق الكود المولّد في قسم <code>&lt;body&gt;</code>.</li>
+                    <li>اضغط <strong>حفظ</strong> وتحقق من ظهور الويدجت في متجرك.</li>
+                </ol>
+                <p>للمساعدة، تواصل مع الدعم: <a href="mailto:support@wsalla.com">support@wsalla.com</a></p>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="Scripts/common.js"></script>
+    <script src="/Scripts/dashboard_content.js"></script>
+    <script src="/Scripts/dashboard.js"></script>
+    <script src="Scripts/whatsapp-info.js"></script>
+</body>
+</html>

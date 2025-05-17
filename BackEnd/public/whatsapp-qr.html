@@ -52,44 +52,7 @@
         </div>
     </div>
 
-    <script>
-        fetch("navbar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("included-navbar").innerHTML = data;
-    
-                // تأكد من تشغيل الدوال بعد إدراج عناصر الـ Navbar
-                const tempToken = localStorage.getItem('tempAuthToken');
-                if (tempToken) {
-                    localStorage.setItem('authToken', tempToken);
-                    localStorage.removeItem('tempAuthToken');
-                }
-    
-                setupSidebar();
-                loadUserData();
-                setupStoreConnection();
-                loadConnectedStores();
-                setupDropdown();
-                setupFullpageStoresDropdown();
-                updateNavbarProfileImage();
-    
-    
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('connected') === '1') {
-                    showSuccess('تم ربط المتجر بنجاح!');
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-            });
-    
-        fetch("sidebar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("included-sidebar").innerHTML = data;
-    
-                // إذا كانت هناك وظائف أخرى للـ Sidebar تحتاج إلى التنفيذ بعد تحميله
-                setupSidebar();
-            });
-    </script>
+    <script src="Scripts/common.js"></script>
     <script src="/Scripts/dashboard_content.js"></script>
     <script src="/Scripts/dashboard.js"></script>
     <script src="Scripts/whatsapp-qr.js"></script>

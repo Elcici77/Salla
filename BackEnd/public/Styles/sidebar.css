@@ -120,14 +120,18 @@
     color: #34C435;
 }
 
+/* تنسيق الـ badge */
 .badge {
     margin-right: auto;
     padding: 0.25rem 0.5rem;
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
+/* حالات الـ badge */
 .badge-inactive {
     background-color: #f0f0f0;
     color: #666;
@@ -141,6 +145,25 @@
 .badge-disconnected {
     background-color: #ffebee;
     color: #d32f2f;
+}
+
+/* تنسيق الأيقونات في الـ badge */
+.badge i.fa-solid {
+    font-size: 20px; /* حجم أكبر قليلاً للدوائر */
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+.badge-connected i.fa-solid.fa-check-circle {
+    color: #fff; /* أبيض لتباين أفضل */
+}
+
+.badge-disconnected i.fa-solid.fa-times-circle {
+    color: #d32f2f; /* أحمر لعدم الاتصال */
+}
+
+.badge-disconnected i.fa-solid.fa-spinner {
+    color: #666; /* رمادي لأيقونة التحميل */
 }
 
 .sidebar-item .badge {
@@ -191,6 +214,10 @@
     .badge {
         padding: 0.2rem 0.4rem;
         font-size: 0.7rem;
+    }
+
+    .badge i.fa-solid {
+        font-size: 10px; /* تقليل الحجم للشاشات الصغيرة */
     }
 
     .sidebar-item .badge {

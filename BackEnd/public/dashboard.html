@@ -6,28 +6,29 @@
     <title>لوحة التحكم</title>
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
-    <!-- إضافة jQuery -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- إضافة Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- إضافة Select2 JS -->
+    <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="Styles/sidebar.css">
     <link rel="stylesheet" href="Styles/dashboard.css">
     <link rel="stylesheet" href="Styles/dashboard_content.css">
     <link rel="preload" href="Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
 </head>
 <body>
-    
     <div id="included-navbar"></div>
     <div id="included-sidebar"></div>
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Welcome Card (يمكن إخفاؤه بعد العرض الأول) -->
+        <!-- Welcome Card -->
         <div class="welcome-card">
             <h1>مرحبًا بك في لوحة التحكم</h1>
             <p>لقد سجلت الدخول بنجاح!</p>
@@ -46,25 +47,19 @@
 
         <!-- Stats Cards -->
         <div class="stats-cards">
-            <!-- إجمالي قيمة السلات المتروكة -->
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-shopping-basket"></i></div>
                 <div class="stat-value" id="abandonedCarts">0</div>
                 <div class="stat-title">إجمالي قيمة السلات المتروكة</div>
                 <div class="stat-trend"><i class="fas fa-arrow-up"></i> 0%</div>
             </div>
-
-            <!-- التحويلات الناجحة -->
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
                 <div class="stat-value" id="conversions">0</div>
                 <div class="stat-title">التحويلات الناجحة</div>
                 <div class="stat-trend"><i class="fas fa-arrow-up"></i> 0%</div>
             </div>
-
-            <!-- تحليل الرسائل -->
             <div class="stat-card message-stats">
-                
                 <div class="message-stat">
                     <div class="message-value">2,450</div>
                     <div class="message-label">الرسائل المرسلة</div>
@@ -96,46 +91,46 @@
             </div>
         </div>
 
-       <!-- أعلى 5 سلات متروكة -->
-<div class="table-card">
-    <div class="card-header">
-        <h3>أعلى 5 سلات متروكة</h3>
-    </div>
-    <div class="table-responsive">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>العميل</th>
-                    <th>تاريخ استلام الحدث</th>
-                    <th>عمر السلة</th>
-                    <th>المنتجات</th>
-                    <th>إجمالي السلة</th>
-                    <th>الحالة</th>
-                </tr>
-            </thead>
-            <tbody id="topCartsTable"></tbody>
-        </table>
-    </div>
-</div>
+        <!-- أعلى 5 سلات متروكة -->
+        <div class="table-card">
+            <div class="card-header">
+                <h3>أعلى 5 سلات متروكة</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>تاريخ استلام الحدث</th>
+                            <th>عمر السلة</th>
+                            <th>المنتجات</th>
+                            <th>إجمالي السلة</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topCartsTable"></tbody>
+                </table>
+            </div>
+        </div>
 
-<!-- أعلى 5 عملاء لديهم سلات متروكة -->
-<div class="table-card">
-    <div class="card-header">
-        <h3>أعلى 5 عملاء لديهم سلات متروكة</h3>
-    </div>
-    <div class="table-responsive">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>العميل</th>
-                    <th>رقم الجوال</th>
-                    <th>عدد السلال</th>
-                </tr>
-            </thead>
-            <tbody id="topCustomersTable"></tbody>
-        </table>
-    </div>
-</div>
+        <!-- أعلى 5 عملاء لديهم سلات متروكة -->
+        <div class="table-card">
+            <div class="card-header">
+                <h3>أعلى 5 عملاء لديهم سلات متروكة</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>رقم الجوال</th>
+                            <th>عدد السلال</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topCustomersTable"></tbody>
+                </table>
+            </div>
+        </div>
 
         <!-- جدول العملاء الجديد -->
         <div class="table-card">
@@ -160,9 +155,7 @@
                             <th>آخر طلب</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- سيتم ملؤه بالبيانات -->
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
@@ -175,48 +168,14 @@
         <div id="lastUpdated" style="text-align: left; padding: 10px; color: #666;">
             آخر تحديث: --
         </div>
-        
     </main>
-    
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="/Scripts/common.js"></script>
+    <script src="/Scripts/dashboard_content.js"></script>
+    <script src="/Scripts/dashboard.js"></script>
     <script>
-        fetch("navbar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("included-navbar").innerHTML = data;
-    
-                // تأكد من تشغيل الدوال بعد إدراج عناصر الـ Navbar
-                const tempToken = localStorage.getItem('tempAuthToken');
-                if (tempToken) {
-                    localStorage.setItem('authToken', tempToken);
-                    localStorage.removeItem('tempAuthToken');
-                }
-    
-                setupSidebar();
-                loadUserData();
-                setupStoreConnection();
-                loadConnectedStores();
-                setupDropdown();
-                setupFullpageStoresDropdown();
-                updateNavbarProfileImage();
-    
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('connected') === '1') {
-                    showSuccess('تم ربط المتجر بنجاح!');
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-            });
-
-            fetch("sidebar.html")
-            .then(response => response.text())
-            .then(data => {
-            document.getElementById("included-sidebar").innerHTML = data;
-
-            // إذا كانت هناك وظائف أخرى للـ Sidebar تحتاج إلى التنفيذ بعد تحميله
-            setupSidebar();
-        });
-
-        // Initialize Chart
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('abandonedCartsChart').getContext('2d');
             const abandonedCartsChart = new Chart(ctx, {
@@ -236,40 +195,29 @@
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: {
-                            display: false
-                        }
+                        legend: { display: false }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+                        y: { beginAtZero: true }
                     }
                 }
             });
 
-            // Period selector functionality
             const periodBtns = document.querySelectorAll('.period-btn');
             periodBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     periodBtns.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    // هنا يمكنك إضافة كود لتحديث البيانات حسب الفترة المحددة
                 });
             });
 
-            // Refresh button functionality
             const refreshBtn = document.querySelector('.refresh-btn');
             refreshBtn.addEventListener('click', function() {
                 this.classList.add('refreshing');
-                setTimeout(() => {
-                    this.classList.remove('refreshing');
-                    // هنا يمكنك إضافة كود لتحديث البيانات
-                }, 1000);
+                setTimeout(() => this.classList.remove('refreshing'), 1000);
             });
         });
 
-        // معالجة معاملات URL لإظهار الإشعارات
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const error = urlParams.get('error');
@@ -284,9 +232,5 @@
             }
         });
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="Scripts/dashboard_content.js"></script>
-    <script src="Scripts/dashboard.js"></script>
 </body>
 </html>

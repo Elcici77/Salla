@@ -4,12 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>السلات المتروكة</title>
-    <link rel="stylesheet" href="Styles/dashboard_content.css">
-    <link rel="stylesheet" href="Styles/abandoned_carts.css">
-    <link rel="stylesheet" href="Styles/sidebar.css">
-    <link rel="stylesheet" href="Styles/dashboard.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/Styles/sidebar.css">
+    <link rel="stylesheet" href="/Styles/dashboard.css">
+    <link rel="stylesheet" href="/Styles/dashboard_content.css">
+    <link rel="stylesheet" href="/Styles/abandoned_carts.css">
+    <link rel="preload" href="/Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
     <div id="included-navbar"></div>
@@ -72,42 +82,11 @@
         </div>
     </main>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        fetch("navbar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("included-navbar").innerHTML = data;
-                const tempToken = localStorage.getItem('tempAuthToken');
-                if (tempToken) {
-                    localStorage.setItem('authToken', tempToken);
-                    localStorage.removeItem('tempAuthToken');
-                }
-                setupSidebar();
-                loadUserData();
-                setupStoreConnection();
-                loadConnectedStores();
-                setupDropdown();
-                setupFullpageStoresDropdown();
-                updateNavbarProfileImage();
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('connected') === '1') {
-                    showSuccess('تم ربط المتجر بنجاح!');
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-            });
-
-        fetch("sidebar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("included-sidebar").innerHTML = data;
-                setupSidebar();
-            });
-    </script>
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="Scripts/dashboard.js"></script>
-    <script src="Scripts/dashboard_content.js"></script>
-    <script src="Scripts/abandoned-carts.js"></script>
+    <script src="/Scripts/common.js"></script>
+    <script src="/Scripts/dashboard_content.js"></script>
+    <script src="/Scripts/dashboard.js"></script>
+    <script src="/Scripts/abandoned-carts.js"></script>
 </body>
 </html>

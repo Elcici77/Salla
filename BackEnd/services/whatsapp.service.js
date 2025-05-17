@@ -177,15 +177,13 @@ class WhatsappService {
             const widParts = connectionData.wid.split('@')[0].split(':');
             const phone = widParts[0];
             const token = widParts[1] || null;
-    
-            // التحقق من وجود الرقم في قاعدة البيانات
+
             const result = await db.query(
                 "SELECT user_id, status FROM user_whatsapp WHERE phone = ? AND user_id != ?",
                 [phone, userId]
             );
             console.log("Existing Phone Check Result for user:", userId, JSON.stringify(result, null, 2));
-    
-            // التعامل مع هيكليات نتائج قاعدة البيانات المختلفة
+
             let existingPhone;
             if (Array.isArray(result) && result.length > 0 && !Array.isArray(result[0])) {
                 existingPhone = result[0];
@@ -194,7 +192,7 @@ class WhatsappService {
             } else if (result && result.rows && Array.isArray(result.rows) && result.rows.length > 0) {
                 existingPhone = result.rows[0];
             }
-    
+
             if (existingPhone) {
                 console.log("Existing phone found for user:", userId, {
                     userId: existingPhone.user_id,
@@ -203,7 +201,7 @@ class WhatsappService {
                 });
                 throw new Error("لا يمكن ربط هذا الرقم، موجود في حساب آخر");
             }
-    
+
             console.log("Saving to DB for user:", userId, JSON.stringify(connectionData, null, 2));
             await db.query(
                 `INSERT INTO user_whatsapp 
@@ -227,7 +225,7 @@ class WhatsappService {
             return true;
         } catch (error) {
             console.error("Save Connection Error for user:", userId, { connectionData, error: error.message });
-            throw new Error(error.message); // تمرير الرسالة الأصلية
+            throw new Error(error.message);
         }
     }
 
@@ -240,16 +238,12 @@ class WhatsappService {
             );
             console.log("Raw Query Result for user:", userId, JSON.stringify(result, null, 2));
 
-            // التعامل مع هيكليات النتائج المختلفة
             let connection;
             if (Array.isArray(result) && result.length > 0 && !Array.isArray(result[0])) {
-                // الحالة القياسية: مصفوفة من الصفوف
                 connection = result[0];
             } else if (Array.isArray(result) && result.length > 0 && Array.isArray(result[0])) {
-                // الحالة في mysql2: [rows, fields]
                 connection = result[0].length > 0 ? result[0][0] : null;
             } else if (result && result.rows && Array.isArray(result.rows) && result.rows.length > 0) {
-                // الحالة في بعض المكتبات المخصصة: { rows: [...] }
                 connection = result.rows[0];
             } else {
                 console.log("No connection found for user:", userId);
@@ -263,7 +257,6 @@ class WhatsappService {
 
             console.log("Get Current Status Result for user:", userId, JSON.stringify(connection, null, 2));
 
-            // تسجيل القيم للتشخيص
             console.log("Connection details for user:", userId, {
                 phone: connection.phone,
                 status: connection.status,
@@ -272,7 +265,6 @@ class WhatsappService {
                 is_connected_at_valid: !!connection.connected_at
             });
 
-            // تبسيط الشرط
             const isConnected = connection.status === 'connected' && !!connection.phone && connection.connected_at != null;
             console.log("Connection status for user:", userId, "isConnected:", isConnected);
 
@@ -291,6 +283,26 @@ class WhatsappService {
             throw new Error("فشل في استرجاع حالة الاتصال: " + error.message);
         }
     }
+
+    async getWhatsAppStatus(userId) {
+        const status = await this.getCurrentStatus(userId);
+        return {
+            phone: status.phone,
+            status: status.connected ? 'connected' : 'disconnected'
+        };
+    }
+
+    async getConnectedStore(userId, merchantId) {
+        const [rows] = await db.query(
+            'SELECT merchant_id, shop_name FROM connected_stores WHERE user_id = ? AND merchant_id = ?',
+            [userId, merchantId]
+        );
+        return rows[0];
+    }
+
+  
+
+    
 }
 
 module.exports = new WhatsappService();
