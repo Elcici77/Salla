@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم</title>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+    <!-- إضافة jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- إضافة Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- إضافة Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="Styles/sidebar.css">
+    <link rel="stylesheet" href="Styles/dashboard.css">
+    <link rel="stylesheet" href="Styles/dashboard_content.css">
+    <link rel="preload" href="Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
+</head>
+<body>
+    
+    <div id="included-navbar"></div>
+    <div id="included-sidebar"></div>
+
+    <!-- Main Content -->
+     
+   <main class="main-content">
+
+   </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script>
+        fetch("navbar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("included-navbar").innerHTML = data;
+    
+                // تأكد من تشغيل الدوال بعد إدراج عناصر الـ Navbar
+                const tempToken = localStorage.getItem('tempAuthToken');
+                if (tempToken) {
+                    localStorage.setItem('authToken', tempToken);
+                    localStorage.removeItem('tempAuthToken');
+                }
+    
+                setupSidebar();
+                loadUserData();
+                setupStoreConnection();
+                loadConnectedStores();
+                setupDropdown();
+                setupFullpageStoresDropdown();
+                updateNavbarProfileImage();
+    
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('connected') === '1') {
+                    showSuccess('تم ربط المتجر بنجاح!');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            });
+
+            fetch("sidebar.html")
+            .then(response => response.text())
+            .then(data => {
+            document.getElementById("included-sidebar").innerHTML = data;
+
+            // إذا كانت هناك وظائف أخرى للـ Sidebar تحتاج إلى التنفيذ بعد تحميله
+            setupSidebar();
+        });
+
+        // Initialize Chart
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('abandonedCartsChart').getContext('2d');
+            const abandonedCartsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+                    datasets: [{
+                        label: 'قيمة السلات المتروكة',
+                        data: [1200, 1900, 3000, 5000, 2000, 3000, 4500],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Period selector functionality
+            const periodBtns = document.querySelectorAll('.period-btn');
+            periodBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    periodBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    // هنا يمكنك إضافة كود لتحديث البيانات حسب الفترة المحددة
+                });
+            });
+
+            // Refresh button functionality
+            const refreshBtn = document.querySelector('.refresh-btn');
+            refreshBtn.addEventListener('click', function() {
+                this.classList.add('refreshing');
+                setTimeout(() => {
+                    this.classList.remove('refreshing');
+                    // هنا يمكنك إضافة كود لتحديث البيانات
+                }, 1000);
+            });
+        });
+
+        // معالجة معاملات URL لإظهار الإشعارات
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            const message = urlParams.get('message');
+            const connected = urlParams.get('connected');
+
+            if (error && message) {
+                showNotification(decodeURIComponent(message), 'error');
+            } else if (connected === '1') {
+                showNotification('تم ربط المتجر بنجاح!', 'success');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="Scripts/dashboard_content.js"></script>
+    <script src="Scripts/dashboard.js"></script>
+</body>
+</html>

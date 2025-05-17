@@ -9,6 +9,7 @@ const path = require('path');
 const multer = require('multer');
 const { query } = require('./db'); 
 const whatsappRoutes = require("./routes/whatsapp");
+const customersRoutes = require("./routes/customers");
 const dashboardApiRoutes = require('./routes/dashboard.api');
 const messagesRoutes = require("./routes/messages");
 const app = express();
@@ -84,7 +85,11 @@ app.use('/api/auth', authRouter);
 app.use('/api/dashboard', dashboardApiRoutes);
 app.use('/Uploads', express.static(path.join(__dirname, 'Uploads')));
 app.use("/api/whatsapp", whatsappRoutes);
+<<<<<<< HEAD
 app.use("/api/messages", messagesRoutes);
+=======
+app.use("/api/customers", customersRoutes);
+>>>>>>> 310fbcae1b1646d9786cc6708c91f6602d1b8d57
 
 app.post(
     '/api/auth/upload-avatar',
