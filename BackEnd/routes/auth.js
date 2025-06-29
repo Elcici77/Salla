@@ -362,7 +362,7 @@ router.post('/register', async (req, res) => {
                 username: username
             },
             process.env.JWT_SECRET || "default_secret",
-            { expiresIn: '1h' }
+            { expiresIn: '1d' }
         );
 
         // إرسال بريد التحقق
@@ -483,7 +483,7 @@ router.post('/login', async (req, res) => {
                 username: user.username
             },
             process.env.JWT_SECRET || "default_secret",
-            { expiresIn: '1h' }
+            { expiresIn: '1d' }
         );
 
         console.log('Generated Token for User:', {
@@ -1139,16 +1139,30 @@ router.get('/user-info', authenticateToken, async (req, res) => {
 
 router.post('/refresh-token', async (req, res) => {
     try {
-        const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) return res.sendStatus(401);
-
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        const accessToken = generateAccessToken({ userId: decoded.userId });
-
+        const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+        if (!refreshToken) {
+            return res.status(400).json({
+                error: 'invalid_request',
+                error_description: 'Refresh token is required'
+            });
+        }
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || "default_refresh_secret");
+        const accessToken = jwt.sign(
+            { userId: decoded.userId, username: decoded.username },
+            process.env.JWT_SECRET || "default_secret",
+            { expiresIn: '15m' }
+        );
         res.json({ accessToken });
     } catch (error) {
-        console.error('Refresh token error:', error);
-        res.sendStatus(403);
+        console.error('Refresh token error:', {
+            message: error.message,
+            cookies: req.cookies,
+            body: req.body
+        });
+        res.status(error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError' ? 403 : 500).json({
+            error: 'invalid_token',
+            error_description: error.message
+        });
     }
 });
 

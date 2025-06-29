@@ -19,7 +19,6 @@ exports.checkStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: "رابط المعلومات مطلوب" });
         }
         const result = await whatsappService.checkStatus(info_url);
-        console.log("Check Status Response:", JSON.stringify(result, null, 2));
         switch (result.status) {
             case 'connected':
                 return res.json({ success: true, status: 'connected', data: result });
@@ -39,7 +38,6 @@ exports.getCurrentStatus = async (req, res) => {
         const userId = req.user.userId;
         console.log("Getting current status for user:", userId);
         const status = await whatsappService.getCurrentStatus(userId);
-        console.log("Get Current Status Response for user:", userId, JSON.stringify(status, null, 2));
         res.json(status);
     } catch (error) {
         console.error("Get Current Status Error for user:", req.user.userId, { error: error.message });
@@ -66,7 +64,6 @@ exports.saveConnection = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { token, phone, wid, info_url, qr_url, unique } = req.body;
-        console.log("Save Connection Request for user:", userId, JSON.stringify(req.body, null, 2));
         if (!wid || !phone) {
             return res.status(400).json({ success: false, message: "معرّف الواتساب (wid) ورقم الهاتف مطلوبان" });
         }
@@ -78,3 +75,28 @@ exports.saveConnection = async (req, res) => {
     }
 };
 
+exports.getWhatsAppGroups = async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) throw new Error('معرف المستخدم غير موجود');
+        const groups = await whatsappService.getWhatsAppGroups(userId);
+        res.json({ success: true, connected: true, groups });
+    } catch (error) {
+        console.error('Error getting WhatsApp groups:', error.message, { userId: req.user?.userId });
+        res.status(500).json({ success: false, connected: false, message: error.message });
+    }
+};
+
+exports.importWhatsAppContacts = async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) throw new Error('معرف المستخدم غير موجود');
+        const { groupIds } = req.body;
+        if (!groupIds || !Array.isArray(groupIds)) throw new Error('معرفات المجموعات مطلوبة');
+        await whatsappService.importWhatsAppContacts(userId, groupIds);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error importing WhatsApp contacts:', error.message, { userId: req.user?.userId });
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

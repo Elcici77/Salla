@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>القائمة السوداء</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/Styles/sidebar.css">
+    <link rel="stylesheet" href="/Styles/dashboard.css">
+    <link rel="stylesheet" href="/Styles/blacklist.css">
+    <link rel="preload" href="/Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="included-navbar"></div>
+    <div id="included-sidebar"></div>
+    
+    <div class="camp-main-content">
+        <div class="card text-center shadow-sm mx-3" style="margin-top: 120px; margin-bottom: 30px;">
+            <div class="card-body">
+                <h2 class="camp-page-title mb-2" style="margin-top: 0 !important;">القائمة السوداء</h2>
+                <p class="text-muted mb-0">من خلال القائمة السوداء تستطيع منع النظام من إرسال رسائل لرقم أو عدة أرقام تحددها</p>
+            </div>
+        </div>
+
+        <div class="blacklist-container">
+            <!-- Card 2: Blacklist Numbers (Left) -->
+            <div class="card blacklist-card">
+                <div class="card-body">
+                    <h5 class="card-title">الأرقام المحظورة <button class="btn btn-success btn-sm float-start" data-bs-toggle="modal" data-bs-target="#addNumberModal">إضافة رقم</button></h5>
+                    <div id="blacklist-numbers-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 1: Unsubscribe Settings (Right) -->
+            <div class="card unsubscribe-settings-card">
+                <div class="card-body">
+                    <h5 class="card-title">إعدادات الإلغاء</h5>
+                    <div class="mb-3">
+                        <label class="form-label">الكلمات المفتاحية للإلغاء (مفصولة بفواصل)</label>
+                        <input type="text" class="form-control" id="unsubscribe-keywords" placeholder="مثال: إلغاء, unsubscribe">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">رسالة تأكيد الإلغاء</label>
+                        <textarea class="form-control" id="unsubscribe-message" rows="3" placeholder="اكتب رسالة التأكيد هنا"></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="save-unsubscribe-settings">حفظ التغييرات</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Number -->
+    <div class="modal fade" id="addNumberModal" tabindex="-1" aria-labelledby="addNumberModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addNumberModalLabel">إضافة رقم جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">رقم الهاتف</label>
+                        <input type="text" class="form-control" id="new-phone-number" placeholder="مثال: +201234567890">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    <button type="button" class="btn btn-primary" id="save-new-number">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="Scripts/common.js"></script>
+    <script src="Scripts/blacklist.js"></script>
+    <script src="Scripts/dashboard_content.js"></script>
+    <script src="Scripts/dashboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

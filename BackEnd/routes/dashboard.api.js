@@ -50,26 +50,22 @@ router.get('/customers', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
         const { merchant_id } = req.query;
-        console.log('Fetching customers for user:', userId, 'Merchant:', merchant_id);
 
         const [stores] = await query(
             'SELECT merchant_id FROM connected_stores WHERE user_id = ? AND merchant_id = ?',
             [userId, merchant_id]
         );
         if (!stores || !Array.isArray(stores) || stores.length === 0) {
-            console.log('No store found for user:', userId, 'Merchant:', merchant_id);
             return res.status(200).json({ success: true, customers: [] });
         }
 
         const merchantId = stores[0].merchant_id;
-        console.log('Fetching customers for merchant:', merchantId);
 
         const [customers] = await query(
             'SELECT name, mobile, email, total_orders, total_spent, last_order_date FROM customers WHERE merchant_id = ?',
             [merchantId]
         );
 
-        console.log('Customers fetched:', customers || []);
         return res.status(200).json({ success: true, customers: Array.isArray(customers) ? customers : [] });
     } catch (error) {
         console.error('Error fetching customers:', {
@@ -85,7 +81,6 @@ router.get('/top-customers', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
         const { merchant_id } = req.query;
-        console.log('Fetching top customers for user:', userId, 'Merchant:', merchant_id);
 
         if (!merchant_id) {
             console.error('Merchant ID is required for top customers');
@@ -97,7 +92,6 @@ router.get('/top-customers', authenticateToken, async (req, res) => {
             [userId, merchant_id]
         );
         if (!stores || !Array.isArray(stores) || stores.length === 0) {
-            console.log('No store found for user:', userId, 'Merchant:', merchant_id);
             return res.status(200).json({ success: true, customers: [] });
         }
 
@@ -115,7 +109,6 @@ router.get('/top-customers', authenticateToken, async (req, res) => {
             [merchant_id, merchant_id]
         );
 
-        console.log('Top customers fetched:', customers || []);
         return res.status(200).json({ success: true, customers: Array.isArray(customers) ? customers : [] });
     } catch (error) {
         console.error('Error fetching top customers:', {
@@ -210,7 +203,6 @@ router.post('/abandoned-carts/sync', authenticateToken, async (req, res) => {
 
         // Check if token is expired
         if (token_expiry && new Date(token_expiry) < new Date()) {
-            console.log('Access token expired, attempting to refresh for merchant:', merchant_id);
             const tokenRefreshed = await sallaApi.refreshAccessToken();
             if (!tokenRefreshed) {
                 return res.status(401).json({ 
@@ -302,7 +294,6 @@ router.post('/abandoned-carts/sync', authenticateToken, async (req, res) => {
             }
 
             await connection.commit();
-            console.log(`Sync completed successfully:`, { updatedCount });
             res.json({ success: true, message: `Synced ${updatedCount} carts`, data: { updatedCount } });
         } catch (error) {
             await connection.rollback();

@@ -28,12 +28,10 @@ function clearIntervals() {
 async function checkExistingConnection(attempt = 1, maxAttempts = 3) {
     try {
         const token = localStorage.getItem("authToken");
-        console.log(`Checking existing connection (attempt ${attempt}/${maxAttempts}), token:`, token ? "exists" : "missing");
         const response = await axios.get('/api/whatsapp/get-current-status', {
             headers: { Authorization: `Bearer ${token}` },
             timeout: 10000
         });
-        console.log("Check Existing Connection Response:", JSON.stringify(response.data, null, 2));
 
         if (response.data.success && response.data.connected) {
             console.log("Connection found, redirecting to info page:", {
@@ -47,7 +45,6 @@ async function checkExistingConnection(attempt = 1, maxAttempts = 3) {
             return true;
         } else {
             if (attempt < maxAttempts) {
-                console.log(`No valid connection found, retrying (${attempt + 1}/${maxAttempts})...`);
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 return await checkExistingConnection(attempt + 1, maxAttempts);
             }
@@ -61,7 +58,6 @@ async function checkExistingConnection(attempt = 1, maxAttempts = 3) {
             status: error.response?.status
         });
         if (attempt < maxAttempts) {
-            console.log(`Retrying connection check (${attempt + 1}/${maxAttempts})...`);
             await new Promise(resolve => setTimeout(resolve, 2000));
             return await checkExistingConnection(attempt + 1, maxAttempts);
         }
@@ -81,7 +77,7 @@ function generateQRCode() {
         timeout: 10000
     })
     .then(response => {
-        console.log("Generate QR Response:", JSON.stringify(response.data, null, 2));
+        
         if (!response.data.success || !response.data.qr_url) {
             throw new Error(response.data.message || "رابط QR غير صالح أو مفقود");
         }
@@ -123,7 +119,6 @@ async function pollConnectionStatus(infoUrl) {
                 headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
                 timeout: 10000
             });
-            console.log("Polling Attempt:", attempts, "Status:", JSON.stringify(response.data, null, 2));
 
             if (response.data.status === 'pending') {
                 updateQRStatus("جارٍ انتظار اكتمال الربط...");
@@ -166,7 +161,6 @@ async function handleSuccessfulConnection(data) {
         const phone = data.phone || (data.wid ? data.wid.split('@')[0].split(':')[0] : 'غير معروف');
         const sessionToken = data.wid ? data.wid.split('@')[0].split(':')[1] || null : null;
 
-        console.log("Connection Data:", JSON.stringify({ phone, wid: data.wid, unique: data.unique, info_url: data.info_url }, null, 2));
 
         const saveResponse = await axios.post('/api/whatsapp/save-connection', {
             token: sessionToken,
@@ -180,7 +174,6 @@ async function handleSuccessfulConnection(data) {
             timeout: 10000
         });
 
-        console.log("Save Connection Response:", JSON.stringify(saveResponse.data, null, 2));
         if (!saveResponse.data.success) {
             throw new Error(saveResponse.data.message || "فشل في حفظ البيانات");
         }
@@ -188,9 +181,7 @@ async function handleSuccessfulConnection(data) {
         // إعادة التحقق من حالة الاتصال بعد الحفظ
         let isConnected = false;
         for (let attempt = 1; attempt <= 3; attempt++) {
-            console.log(`Verifying connection after save (attempt ${attempt}/3)...`);
             isConnected = await checkExistingConnection(attempt, 3);
-            console.log(`CheckExistingConnection attempt ${attempt} result:`, isConnected);
             if (isConnected) break;
             await new Promise(resolve => setTimeout(resolve, 2000));
         }

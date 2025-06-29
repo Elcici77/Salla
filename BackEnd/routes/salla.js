@@ -52,12 +52,7 @@ router.post('/webhooks', verifyWebhook, async (req, res) => {
 
         switch (event) {
             case 'order.created':
-                console.log('Customer data:', {
-                    id: data.customer?.id,
-                    name: data.customer?.name,
-                    mobile: data.customer?.mobile,
-                    email: data.customer?.email
-                });
+                
                 await handleOrderCreated(data);
                 await handleCustomerData(data.customer, data.merchant_id);
                 break;
@@ -154,11 +149,6 @@ async function handleAppInstalled(storeData) {
             console.log('No store found in database for merchant:', storeData.id, 'Skipping token verification.');
             return true;
         }
-
-        console.log('Found store tokens:', {
-            accessToken: store.access_token ? 'exists' : 'missing',
-            refreshToken: store.refresh_token ? 'exists' : 'missing'
-        });
 
         if (store.access_token) {
             const isValid = await verifyTokenBasic(store.access_token);
@@ -349,13 +339,6 @@ router.post('/sync-customers', authenticateToken, async (req, res) => {
                 timeout: 10000
             });
 
-            console.log('API Response:', { 
-                status: response.status, 
-                page: response.data.pagination?.current_page || page,
-                totalCustomers: response.data.data?.length || 0,
-                totalPages: response.data.pagination?.total_pages || 1
-            });
-
             if (!response.data.success || !response.data.data) {
                 console.error('Invalid API response:', response.data);
                 return res.status(500).json({ 
@@ -492,13 +475,6 @@ router.get('/connect', authenticateToken, async (req, res) => {
             `approval_prompt=force&` +
             `access_type=offline`;
 
-        console.log('Generated auth URL for user:', {
-            userId,
-            authUrl,
-            scopes,
-            state
-        });
-
         res.json({ success: true, authUrl });
     } catch (error) {
         console.error('Connect error:', {
@@ -530,7 +506,6 @@ router.get('/callback', async (req, res) => {
                      WHERE state = ?`,
                     [error, state]
                 );
-                console.log('Updated store_connections status to failed for state:', state);
             } catch (dbError) {
                 console.error('Failed to update connection status:', {
                     error: dbError.message,
@@ -563,10 +538,6 @@ router.get('/callback', async (req, res) => {
         }
 
         const connection = connections[0];
-        console.log('Found valid connection:', {
-            connectionId: connection.id,
-            userId: connection.user_id
-        });
 
         const tokenResponse = await axios.post(
             'https://accounts.salla.sa/oauth2/token',
@@ -598,11 +569,6 @@ router.get('/callback', async (req, res) => {
             console.error('Missing tokens in token response:', tokenResponse.data);
             throw new Error('No access_token or refresh_token received from Salla');
         }
-        console.log('Token exchange successful:', {
-            accessToken: access_token.substring(0, 10) + '...',
-            refreshToken: refresh_token.substring(0, 10) + '...',
-            expiresIn: expires_in
-        });
 
         const storeInfo = await axios.get('https://api.salla.dev/admin/v2/store/info', {
             headers: {
@@ -709,7 +675,6 @@ router.get('/callback', async (req, res) => {
                      WHERE state = ?`,
                     [err.message, state]
                 );
-                console.log('Updated store_connections status to failed for state:', state);
             } catch (dbError) {
                 console.error('Failed to update failed status:', {
                     error: dbError.message,

@@ -3,143 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم</title>
-    <!-- Select2 CSS -->
+    <title>قائمة العملاء</title>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
-    <!-- إضافة jQuery -->
+    <link rel="stylesheet" href="/Styles/sidebar.css">
+    <link rel="stylesheet" href="/Styles/dashboard.css">
+    <link rel="stylesheet" href="/Styles/dashboard_content.css">
+    <link rel="stylesheet" href="Styles/customers.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="preload" href="/Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- إضافة Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- إضافة Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <link rel="stylesheet" href="Styles/sidebar.css">
-    <link rel="stylesheet" href="Styles/dashboard.css">
-    <link rel="stylesheet" href="Styles/dashboard_content.css">
-    <link rel="preload" href="Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
 </head>
 <body>
-    
     <div id="included-navbar"></div>
     <div id="included-sidebar"></div>
-
-    <!-- Main Content -->
-     
-   <main class="main-content">
-
-   </main>
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    <script>
-        fetch("navbar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("included-navbar").innerHTML = data;
-    
-                // تأكد من تشغيل الدوال بعد إدراج عناصر الـ Navbar
-                const tempToken = localStorage.getItem('tempAuthToken');
-                if (tempToken) {
-                    localStorage.setItem('authToken', tempToken);
-                    localStorage.removeItem('tempAuthToken');
-                }
-    
-                setupSidebar();
-                loadUserData();
-                setupStoreConnection();
-                loadConnectedStores();
-                setupDropdown();
-                setupFullpageStoresDropdown();
-                updateNavbarProfileImage();
-    
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('connected') === '1') {
-                    showSuccess('تم ربط المتجر بنجاح!');
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-            });
+    <div class="cust-main-content">
+        <!-- Page Header -->
+        <h2 class="cust-page-title my-4">قائمة العملاء</h2>
+        <!-- Cards Section -->
+        <div class="row mb-4">
+            <!-- Card 1: Customers List -->
+            <div class="col-md-3">
+                <div class="cust-card text-center">
+                    <div class="cust-card-body">
+                        <i class="fas fa-users fa-2x mb-2 cust-icon-primary"></i>
+                        <h5 class="cust-card-title">قائمة العملاء</h5>
+                        <p class="cust-card-text"><span id="cust-total-customers">0</span> عميل</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Card 2: New Group -->
+            <div class="col-md-3">
+                <div class="cust-card text-center cust-clickable" data-bs-toggle="modal" data-bs-target="#custNewGroupModal">
+                    <div class="cust-card-body">
+                        <i class="fas fa-plus-circle fa-2x mb-2 cust-icon-success"></i>
+                        <h5 class="cust-card-title">مجموعة جديدة</h5>
+                        <p class="cust-card-text">إنشاء مجموعة جديدة</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Card 3: Customer Segmentation -->
+            <div class="col-md-3">
+                <div class="cust-card text-center">
+                    <div class="cust-card-body">
+                        <i class="fas fa-filter fa-2x mb-2 cust-icon-info"></i>
+                        <h5 class="cust-card-title">تقسيم العملاء</h5>
+                        <p class="cust-card-text">تصنيف العملاء</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Dynamic Group Cards -->
+            <div id="cust-group-cards" class="col-md-3"></div>
+        </div>
+        <!-- Sync Button -->
+        <div class="mb-3">
+            <button class="cust-btn cust-btn-primary" id="cust-sync-customers">
+                <i class="fas fa-sync"></i> مزامنة العملاء
+            </button>
+        </div>
+        <!-- Filters Section -->
+        <div class="cust-filters mb-4">
+            <div class="cust-filter-group">
+                <input type="text" class="cust-search-input" id="cust-search-input" placeholder="ابحث برقم الجوال أو البريد الإلكتروني">
+            </div>
+            <div class="cust-filter-group">
+                <select class="cust-filter-select" id="cust-sort-select">
+                    <option value="latest">من الأحدث إلى الأقدم</option>
+                    <option value="oldest">من الأقدم إلى الأحدث</option>
+                </select>
+            </div>
+        </div>
+        <!-- Actions and Table -->
+        <div class="cust-table-container">
+            <!-- Action Buttons -->
+            <div class="mb-3">
+                <div class="btn-group">
+                    <button class="cust-btn cust-btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        استيراد العملاء
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#custImportWhatsAppModal">من واتساب</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#custImportExcelModal">رفع ملف Excel</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#custManualImportModal">لصق الأرقام يدويًا</a></li>
+                    </ul>
+                </div>
+                <button class="cust-btn cust-btn-success mx-2" data-bs-toggle="modal" data-bs-target="#custNewCustomerModal">عميل جديد</button>
+                <a href="/campaigns.html" class="cust-btn cust-btn-primary" id="cust-create-campaign">إنشاء رسالة جماعية</a>
+            </div>
+            <!-- Customers Table -->
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="cust-select-all"></th>
+                        <th>اسم العميل</th>
+                        <th>المجموعات</th>
+                        <th>النوع</th>
+                        <th>المدينة</th>
+                        <th>رقم الجوال</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>تاريخ المزامنة</th>
+                        <th>تاريخ التسجيل</th>
+                    </tr>
+                </thead>
+                <tbody id="cust-customers-table"></tbody>
+            </table>
+        </div>
+    </div>
 
-            fetch("sidebar.html")
-            .then(response => response.text())
-            .then(data => {
-            document.getElementById("included-sidebar").innerHTML = data;
+    <!-- Modals -->
+    <!-- New Group Modal -->
+    <div class="modal fade" id="custNewGroupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إنشاء مجموعة جديدة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cust-group-name" class="form-label">اسم المجموعة</label>
+                        <input type="text" class="form-control" id="cust-group-name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cust-btn cust-btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="cust-btn cust-btn-primary" id="cust-create-group">إنشاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // إذا كانت هناك وظائف أخرى للـ Sidebar تحتاج إلى التنفيذ بعد تحميله
-            setupSidebar();
-        });
+    <!-- Import from WhatsApp Modal -->
+    <div class="modal fade" id="custImportWhatsAppModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">استيراد من واتساب</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="cust-whatsapp-groups">
+                        <!-- Groups will be loaded dynamically -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cust-btn cust-btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="cust-btn cust-btn-primary" id="cust-import-whatsapp">استيراد</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // Initialize Chart
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('abandonedCartsChart').getContext('2d');
-            const abandonedCartsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
-                    datasets: [{
-                        label: 'قيمة السلات المتروكة',
-                        data: [1200, 1900, 3000, 5000, 2000, 3000, 4500],
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+    <!-- Import Excel Modal -->
+    <div class="modal fade" id="custImportExcelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">رفع ملف Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="file" class="form-control" id="cust-excel-file" accept=".xlsx,.xls">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cust-btn cust-btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="cust-btn cust-btn-primary" id="cust-upload-excel">رفع</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // Period selector functionality
-            const periodBtns = document.querySelectorAll('.period-btn');
-            periodBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    periodBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    // هنا يمكنك إضافة كود لتحديث البيانات حسب الفترة المحددة
-                });
-            });
+    <!-- Manual Import Modal -->
+    <div class="modal fade" id="custManualImportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">لصق الأرقام يدويًا</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" id="cust-manual-numbers" rows="5" placeholder="أدخل الأرقام، كل رقم في سطر"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cust-btn cust-btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="cust-btn cust-btn-primary" id="cust-import-manual">استيراد</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // Refresh button functionality
-            const refreshBtn = document.querySelector('.refresh-btn');
-            refreshBtn.addEventListener('click', function() {
-                this.classList.add('refreshing');
-                setTimeout(() => {
-                    this.classList.remove('refreshing');
-                    // هنا يمكنك إضافة كود لتحديث البيانات
-                }, 1000);
-            });
-        });
+    <!-- New Customer Modal -->
+    <div class="modal fade" id="custNewCustomerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة عميل جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cust-customer-name" class="form-label">اسم العميل</label>
+                        <input type="text" class="form-control" id="cust-customer-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cust-customer-phone" class="form-label">رقم الجوال</label>
+                        <input type="text" class="form-control" id="cust-customer-phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cust-customer-email" class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-control" id="cust-customer-email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cust-customer-city" class="form-label">المدينة</label>
+                        <input type="text" class="form-control" id="cust-customer-city">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cust-btn cust-btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="cust-btn cust-btn-primary" id="cust-add-customer">إضافة</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // معالجة معاملات URL لإظهار الإشعارات
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
-            const message = urlParams.get('message');
-            const connected = urlParams.get('connected');
 
-            if (error && message) {
-                showNotification(decodeURIComponent(message), 'error');
-            } else if (connected === '1') {
-                showNotification('تم ربط المتجر بنجاح!', 'success');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        });
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="Scripts/common.js"></script>
+    <script src="Scripts/customers.js"></script>
     <script src="Scripts/dashboard_content.js"></script>
     <script src="Scripts/dashboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

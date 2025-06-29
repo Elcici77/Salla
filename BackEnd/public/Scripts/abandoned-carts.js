@@ -93,8 +93,6 @@ async function loadStores() {
         }
 
         const jsonResponse = await response.json();
-        console.log('Stores API response:', jsonResponse);
-
         if (!jsonResponse.success || !Array.isArray(jsonResponse.stores)) {
             console.error('Invalid stores data:', jsonResponse);
             throw new Error('فشل جلب المتاجر: بيانات غير صالحة');
@@ -130,7 +128,6 @@ async function loadStores() {
         }
 
         $('#store-select').on('change', () => {
-            console.log('Selected merchant_id:', select.value);
             loadAbandonedCarts();
         });
     } catch (error) {

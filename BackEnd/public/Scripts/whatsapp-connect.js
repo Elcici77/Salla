@@ -30,7 +30,6 @@ async function checkExistingConnection() {
             headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
             timeout: 10000
         });
-        console.log("Check Existing Connection Response:", response.data);
 
         if (response.data.success && response.data.connected && response.data.phone && response.data.connected_at) {
             console.log("Connection found, showing account info:", {
@@ -43,12 +42,6 @@ async function checkExistingConnection() {
             });
             return true;
         } else {
-            console.log("No valid connection found:", {
-                success: response.data.success,
-                connected: response.data.connected,
-                phone: response.data.phone,
-                connected_at: response.data.connected_at
-            });
             return false;
         }
     } catch (error) {
@@ -72,7 +65,6 @@ function generateQRCode() {
         timeout: 10000
     })
     .then(response => {
-        console.log("Generate QR Response:", response.data);
         if (!response.data.success || !response.data.qr_url) {
             throw new Error(response.data.message || "رابط QR غير صالح أو مفقود");
         }
@@ -81,7 +73,6 @@ function generateQRCode() {
         qrImg.alt = "رمز QR";
         qrImg.crossOrigin = "anonymous";
         qrImg.onload = () => {
-            console.log("QR Image loaded successfully");
             qrContainer.innerHTML = "";
             qrContainer.appendChild(qrImg);
             updateQRStatus("📱 يرجى مسح الرمز خلال 400 ثانية");
@@ -114,7 +105,6 @@ async function pollConnectionStatus(infoUrl) {
                 headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
                 timeout: 10000
             });
-            console.log("Polling Attempt:", attempts, "Status:", response.data);
 
             if (response.data.status === lastStatus && attempts > 10) {
                 clearInterval(pollInterval);
@@ -172,7 +162,6 @@ async function handleSuccessfulConnection(data) {
                 const phone = data.phone || (data.wid ? data.wid.split('@')[0].split(':')[0] : 'غير معروف');
                 const sessionToken = data.wid ? data.wid.split('@')[0].split(':')[1] || null : null;
 
-                console.log("Connection Data:", { phone, wid: data.wid, unique: data.unique, info_url: data.info_url });
 
                 // عرض بطاقة المعلومات
                 showWhatsAppInfo({ phone, connected_at: new Date().toLocaleString() });
@@ -190,7 +179,6 @@ async function handleSuccessfulConnection(data) {
                     timeout: 10000
                 });
 
-                console.log("Save Connection Response:", saveResponse.data);
                 if (!saveResponse.data.success) {
                     console.error("Failed to save connection:", saveResponse.data.message);
                     throw new Error(saveResponse.data.message || "فشل في حفظ البيانات");
@@ -273,7 +261,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const accountInfo = document.getElementById("account-info");
     const statusText = document.getElementById("status-text");
 
-    console.log("DOMContentLoaded triggered, token:", token ? "exists" : "missing");
 
     if (!token) {
         console.log("No token found, showing QR");
@@ -306,7 +293,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
             timeout: 10000
         });
-        console.log("Disconnect Response:", disconnectResponse.data);
         if (disconnectResponse.data.success) {
             const accountInfo = document.getElementById("account-info");
             const qrSection = document.getElementById("qr-section");

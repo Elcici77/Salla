@@ -5,8 +5,6 @@ const axios = require('axios');
 
 async function getDashboardData(userId, period = 'weekly', merchantId) {
     try {
-        console.log('Fetching dashboard data for user:', userId, 'Merchant:', merchantId);
-
         // 1. Fetch basic store data
         // 1. جلب بيانات المتجر الأساسية
         const [stores] = await query(
@@ -17,7 +15,6 @@ async function getDashboardData(userId, period = 'weekly', merchantId) {
         );
 
         if (!stores || stores.length === 0) {
-            console.log('No store connected for user:', userId, 'Merchant:', merchantId);
             return {
                 success: true,
                 store_name: null,
@@ -32,7 +29,6 @@ async function getDashboardData(userId, period = 'weekly', merchantId) {
         }
 
         const store = stores[0];
-        console.log('Store found:', { merchantId: store.merchant_id, shopName: store.shop_name });
 
         // 2. جلب الإحصائيات الأساسية
         const [stats] = await query(
@@ -48,8 +44,6 @@ async function getDashboardData(userId, period = 'weekly', merchantId) {
             `,
             [userId, merchantId, userId, merchantId, userId, merchantId]
         );
-
-        console.log('Stats fetched:', stats);
 
         // 3. جلب آخر 5 سلات
         const [carts] = await query(
@@ -67,8 +61,6 @@ async function getDashboardData(userId, period = 'weekly', merchantId) {
              LIMIT 5`,
             [userId, merchantId]
         );
-
-        console.log('Recent carts fetched:', { count: carts.length });
 
         // 4. جلب بيانات الرسم البياني
         const chartData = await getAbandonedCartsData([{ user_id: userId, merchant_id: merchantId }], period);
@@ -108,8 +100,6 @@ async function getDashboardData(userId, period = 'weekly', merchantId) {
 
 async function fetchFreshSallaData(merchantId, accessToken, period) {
     try {
-        console.log('Fetching fresh Salla data:', { merchantId, period });
-
         const [cartsResponse] = await Promise.all([
             axios.get(`https://api.salla.dev/admin/v2/abandoned-carts?period=${period}`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -122,10 +112,6 @@ async function fetchFreshSallaData(merchantId, accessToken, period) {
                 return { data: { data: [] } };
             })
         ]);
-
-        console.log('Salla data fetched:', {
-            cartsCount: cartsResponse.data.data.length
-        });
 
         return {
             carts: cartsResponse.data.data || []
@@ -149,7 +135,6 @@ async function updateLocalDatabase(userId, freshData) {
 
     try {
         const now = new Date().toISOString();
-        console.log('Updating local database for user:', userId);
 
         for (const cart of freshData.carts) {
             try {
@@ -211,8 +196,6 @@ async function updateLocalDatabase(userId, freshData) {
                     ]
                 );
 
-                console.log('Cart updated:', { cartId: cart.id, affectedRows: result.affectedRows });
-
             } catch (error) {
                 console.error('Failed to update cart:', {
                     cartId: cart.id,
@@ -223,7 +206,6 @@ async function updateLocalDatabase(userId, freshData) {
         }
 
         await connection.commit();
-        console.log('Database update completed for user:', userId);
 
     } catch (error) {
         console.error('updateLocalDatabase error:', {
@@ -240,7 +222,6 @@ async function updateLocalDatabase(userId, freshData) {
 
 async function getLocalAbandonedCarts(userId, period, merchantId) {
     try {
-        console.log('Fetching local abandoned carts for user:', userId, 'Period:', period, 'Merchant:', merchantId);
 
         const timeUnit = getValidTimeUnit(period);
 
@@ -250,8 +231,6 @@ async function getLocalAbandonedCarts(userId, period, merchantId) {
              AND created_at >= DATE_SUB(NOW(), INTERVAL 1 ${timeUnit})`,
             [userId, merchantId]
         );
-
-        console.log('Local abandoned carts fetched:', { count: carts.length });
 
         return {
             items: carts || [],

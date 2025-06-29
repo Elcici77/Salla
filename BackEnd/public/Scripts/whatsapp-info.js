@@ -1,16 +1,13 @@
 async function checkExistingConnection(attempt = 1, maxAttempts = 3) {
     try {
         const token = localStorage.getItem("authToken");
-        console.log(`Checking existing connection (attempt ${attempt}/${maxAttempts}), token:`, token ? "exists" : "missing");
         const response = await axios.get('/api/whatsapp/get-current-status', {
             headers: { Authorization: `Bearer ${token}` },
             timeout: 10000
         });
-        console.log("Check Existing Connection Response:", JSON.stringify(response.data, null, 2));
 
         if (!response.data.success || !response.data.connected) {
             if (attempt < maxAttempts) {
-                console.log(`No valid connection found, retrying (${attempt + 1}/${maxAttempts})...`);
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 return await checkExistingConnection(attempt + 1, maxAttempts);
             }
@@ -39,7 +36,6 @@ async function checkExistingConnection(attempt = 1, maxAttempts = 3) {
             status: error.response?.status
         });
         if (attempt < maxAttempts) {
-            console.log(`Retrying connection check (${attempt + 1}/${maxAttempts})...`);
             await new Promise(resolve => setTimeout(resolve, 2000));
             return await checkExistingConnection(attempt + 1, maxAttempts);
         }
@@ -77,7 +73,6 @@ async function disconnectAccount() {
             headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
             timeout: 10000
         });
-        console.log("Disconnect Response:", JSON.stringify(response.data, null, 2));
         if (response.data.success) {
             updateStatusMessage("تم فك الربط بنجاح");
 

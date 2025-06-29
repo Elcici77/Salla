@@ -53,7 +53,6 @@ class SallaAPI {
                 ]
             );
 
-            console.log('Token refreshed successfully for merchant:', this.merchantId);
             return true;
         } catch (error) {
             console.error('Refresh token failed:', {
@@ -189,7 +188,6 @@ class SallaAPI {
                 ...this.getPeriodParams(period)
             };
             const data = await this.getRequest(endpoint, params);
-            console.log('Abandoned carts data fetched:', data);
             return this.processCartsData(data);
         } catch (error) {
             console.error('Failed to fetch abandoned carts:', {
@@ -245,7 +243,6 @@ class SallaAPI {
             status: cart.status || 'pending'
         }));
 
-        console.log('Processed abandoned carts:', processedCarts);
         return processedCarts;
     }
 

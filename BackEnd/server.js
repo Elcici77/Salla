@@ -9,9 +9,13 @@ const path = require('path');
 const multer = require('multer');
 const { query } = require('./db'); 
 const whatsappRoutes = require("./routes/whatsapp");
-const customersRoutes = require("./routes/customers");
+const customersRoutes = require('./routes/customers');
+const groupsRoutes = require('./routes/groups');
+const campaignsRoutes = require('./routes/campaigns');
 const dashboardApiRoutes = require('./routes/dashboard.api');
 const messagesRoutes = require("./routes/messages");
+const uploadRoutes = require('./routes/upload');
+const blacklistRoutes = require('./routes/blacklist');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -85,11 +89,12 @@ app.use('/api/auth', authRouter);
 app.use('/api/dashboard', dashboardApiRoutes);
 app.use('/Uploads', express.static(path.join(__dirname, 'Uploads')));
 app.use("/api/whatsapp", whatsappRoutes);
-<<<<<<< HEAD
 app.use("/api/messages", messagesRoutes);
-=======
-app.use("/api/customers", customersRoutes);
->>>>>>> 310fbcae1b1646d9786cc6708c91f6602d1b8d57
+app.use('/api/customers', customersRoutes);
+app.use('/api/groups', groupsRoutes);
+app.use('/api/campaigns', campaignsRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/blacklist', blacklistRoutes);
 
 app.post(
     '/api/auth/upload-avatar',

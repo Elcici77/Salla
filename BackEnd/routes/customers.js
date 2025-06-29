@@ -1,14 +1,24 @@
-
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const whatsappController = require("../controllers/CustomerController");
+const customersController = require('../controllers/customersController');
 const { authenticateToken } = require('./auth');
+const multer = require('multer');
 
-router.get("/myFunc", authenticateToken, CustomerController.myFunc);
-// router.get("/generate-qr", authenticateToken, whatsappController.generateQR);
-// router.get("/check-status", authenticateToken, whatsappController.checkStatus);
-// router.get("/get-current-status", authenticateToken, whatsappController.getCurrentStatus);
-// router.post("/disconnect", authenticateToken, whatsappController.disconnect);
-// router.post("/save-connection", authenticateToken, whatsappController.saveConnection);
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Get customers (with search and sort)
+router.get('/', authenticateToken, customersController.getCustomers);
+
+// Add new customer
+ router.post('/', authenticateToken, customersController.createCustomer);
+
+// Sync customers
+router.post('/sync', authenticateToken, customersController.syncCustomers);
+
+// Import customers from Excel
+router.post('/import/excel', authenticateToken, upload.single('file'), customersController.importExcel);
+
+// Import customers manually
+router.post('/import/manual', authenticateToken, customersController.importManual);
 
 module.exports = router;

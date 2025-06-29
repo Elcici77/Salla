@@ -75,7 +75,6 @@ async function initStoreSelect() {
             return;
         }
 
-        console.log('Fetching connected stores from /api/salla/stores...');
         const response = await fetchWithRetry('/api/salla/stores', {
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -84,14 +83,8 @@ async function initStoreSelect() {
             }
         });
 
-        console.log('Stores response:', {
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries())
-        });
 
         const rawResponse = await response.text();
-        console.log('Raw stores response:', rawResponse || '[empty response]');
 
         let result;
         try {
@@ -105,7 +98,6 @@ async function initStoreSelect() {
             showNotification('استجابة غير صالحة من الخادم', 'error');
             return;
         }
-        console.log('Parsed stores response:', result);
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -137,10 +129,6 @@ async function initStoreSelect() {
                 option.value = store.merchant_id;
                 option.textContent = store.shop_name || 'متجر بدون اسم';
                 storeSelect.appendChild(option);
-                console.log('Added store to dropdown:', {
-                    merchantId: store.merchant_id,
-                    shopName: store.shop_name
-                });
             });
 
             // تحميل البيانات للمتجر الأول تلقائيًا
@@ -148,7 +136,6 @@ async function initStoreSelect() {
             await syncCustomers(result.stores[0].merchant_id);
             await loadDashboardData('30d', result.stores[0].merchant_id);
         } else {
-            console.log('No stores found in response:', result.stores);
             showNotification('لا توجد متاجر مربوطة. يرجى ربط متجر جديد.', 'warning');
         }
 
@@ -162,7 +149,6 @@ async function initStoreSelect() {
         // تحديث البيانات عند اختيار متجر مع مزامنة تلقائية
         storeSelect.addEventListener('change', async () => {
             const merchantId = storeSelect.value;
-            console.log('Store selected:', { merchantId });
             if (merchantId) {
                 showLoading(true);
                 await syncCustomers(merchantId);
@@ -194,7 +180,6 @@ async function loadDashboardData(period = '30d', merchantId = '') {
         }
 
         // جلب بيانات الـ dashboard
-        console.log(`Fetching dashboard data for period: ${period}, merchantId: ${merchantId}`);
         const url = `/api/dashboard?period=${period}${merchantId ? `&merchant_id=${merchantId}` : ''}`;
         const dashboardResponse = await fetchWithRetry(url, {
             headers: {
@@ -204,18 +189,12 @@ async function loadDashboardData(period = '30d', merchantId = '') {
             }
         });
 
-        console.log('Dashboard response:', {
-            status: dashboardResponse.status,
-            statusText: dashboardResponse.statusText
-        });
 
         let data = {};
         if (dashboardResponse.ok) {
             data = await dashboardResponse.json();
-            console.log('Dashboard data:', data);
         } else {
             if (dashboardResponse.status === 401) {
-                console.log('Token expired, attempting to refresh...');
                 await refreshToken();
                 return loadDashboardData(period, merchantId); // إعادة المحاولة بعد تجديد التوكن
             }
@@ -233,7 +212,6 @@ async function loadDashboardData(period = '30d', merchantId = '') {
         }
 
         // جلب العملاء دائمًا، حتى لو فشل /api/dashboard
-        console.log('Attempting to load customers table...');
         await updateCustomersTable(merchantId);
 
     } catch (error) {
@@ -243,7 +221,6 @@ async function loadDashboardData(period = '30d', merchantId = '') {
         });
         showNotification(`خطأ في تحميل البيانات: ${error.message}`, 'error');
         // محاولة جلب العملاء حتى في حالة الخطأ
-        console.log('Attempting to load customers table despite dashboard error...');
         await updateCustomersTable(merchantId);
     } finally {
         showLoading(false);
@@ -638,7 +615,6 @@ async function updateCustomersTable(merchantId = '') {
             return;
         }
 
-        console.log(`Fetching customers from /api/dashboard/customers${merchantId ? `?merchant_id=${merchantId}` : ''}...`);
         const response = await fetchWithRetry(`/api/dashboard/customers${merchantId ? `?merchant_id=${merchantId}` : ''}`, {
             method: 'GET',
             headers: {
@@ -648,11 +624,6 @@ async function updateCustomersTable(merchantId = '') {
             }
         });
 
-        console.log('Fetch customers response:', {
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries())
-        });
 
         const rawResponse = await response.text();
         console.log('Raw response from /api/dashboard/customers:', rawResponse || '[empty response]');
@@ -671,7 +642,6 @@ async function updateCustomersTable(merchantId = '') {
             showNotification(`استجابة غير صالحة من الخادم`, 'error');
             return;
         }
-        console.log('Parsed customers response:', data);
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -698,7 +668,6 @@ async function updateCustomersTable(merchantId = '') {
             return;
         }
 
-        console.log('Rendering', data.customers.length, 'customers in table');
         data.customers.forEach((customer, index) => {
             try {
                 const row = document.createElement('tr');
@@ -711,7 +680,6 @@ async function updateCustomersTable(merchantId = '') {
                     <td>${formatDate(customer.last_order_date) || 'غير متوفر'}</td>
                 `;
                 tableBody.appendChild(row);
-                console.log(`Rendered customer ${index + 1}:`, customer);
             } catch (rowError) {
                 console.error(`Failed to render customer ${index + 1}:`, {
                     customer,
@@ -755,7 +723,6 @@ async function syncCustomers(merchantId = '') {
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المزامنة...';
         }
 
-        console.log('Starting customer sync for merchant:', merchantId);
         const response = await fetchWithRetry('/api/salla/sync-customers', {
             method: 'POST',
             headers: {
@@ -765,13 +732,8 @@ async function syncCustomers(merchantId = '') {
             body: JSON.stringify({ merchant_id: merchantId })
         });
 
-        console.log('Sync customers response:', {
-            status: response.status,
-            statusText: response.statusText
-        });
 
         const data = await response.json();
-        console.log('Parsed sync customers response:', data);
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -794,7 +756,6 @@ async function syncCustomers(merchantId = '') {
         }
 
         if (data.success) {
-            console.log('Customer sync successful:', data);
             showNotification(`تم مزامنة ${data.count || 'العديد من'} عميل بنجاح`, 'success');
             await updateCustomersTable(merchantId);
             await loadDashboardData('30d', merchantId); // تحديث جميع بيانات الصفحة بعد المزامنة
@@ -825,10 +786,6 @@ async function refreshToken() {
             credentials: 'include'
         });
 
-        console.log('Refresh token response:', {
-            status: response.status,
-            statusText: response.statusText
-        });
 
         if (!response.ok) {
             throw new Error(`HTTP error: ${response.status}`);
@@ -1033,8 +990,4 @@ function getStatusText(status) {
 function checkVisibility() {
     const style1 = window.getComputedStyle(document.getElementById('abandonedCarts'));
     const style2 = window.getComputedStyle(document.getElementById('conversions'));
-    console.log('Visibility check:', {
-        abandonedCarts: style1.display + ' ' + style1.visibility,
-        conversions: style2.display + ' ' + style2.visibility
-    });
 }

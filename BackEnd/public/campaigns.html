@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الحملات الترويجية</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/Styles/sidebar.css">
+    <link rel="stylesheet" href="/Styles/dashboard.css">
+    <link rel="stylesheet" href="/Styles/dashboard_content.css">
+    <link rel="stylesheet" href="/Styles/campaigns.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="preload" href="/Fonts/HONORSansArabicUI-DB.ttf" as="font" type="font/ttf" crossorigin>
+    <style>
+        .select2-white-bg .select2-results__option {
+            background-color: white !important;
+        }
+        .campaign-actions i {
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+        .campaign-actions i:hover {
+            color: #1a3c34;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="included-navbar"></div>
+    <div id="included-sidebar"></div>
+
+    <div class="camp-main-content">
+        <h2 class="camp-page-title my-5">إدارة الحملات الترويجية</h2>
+
+        <ul class="nav nav-tabs mb-4" id="campaignTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="tab-launch" href="#">إطلاق حملة جديدة</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="tab-launched" href="#">الحملات المنفذة</a>
+            </li>
+        </ul>
+
+        <!-- تبويب إطلاق حملة -->
+        <div id="section-launch">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="camp-form-container p-4">
+                        <div class="mb-4">
+                            <label for="camp-name" class="form-label">اسم الحملة</label>
+                            <input type="text" class="form-control" id="camp-name" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">الجمهور</label>
+                            <select class="form-control" id="camp-recipients" multiple></select>
+                            <div class="mt-4">
+                                <button type="button" class="camp-btn camp-btn-secondary me-3" id="camp-add-recipient"><i class="fas fa-plus"></i> إضافة رقم</button>
+                                <button type="button" class="camp-btn camp-btn-info" id="camp-select-all">اختيار الكل</button>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">محتوى الحملة</label>
+                            <div class="mb-3">
+                                <label class="form-label">المرفقات</label>
+                                <input type="file" class="form-control" id="camp-media-file" accept="image/*,video/*,audio/*">
+                            </div>
+                            <textarea class="form-control" id="camp-message" rows="5" placeholder="اكتب محتوى الحملة هنا"></textarea>
+                            <div class="mt-4">
+                                <button type="button" class="camp-btn camp-btn-info me-3" data-variable="customer_phone">رقم العميل</button>
+                                <button type="button" class="camp-btn camp-btn-info" data-variable="date_now">التاريخ الحالي</button>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">جدولة تاريخ التشغيل</label>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="camp-schedule-date" class="form-label">التاريخ</label>
+                                    <input type="date" class="form-control" id="camp-schedule-date" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="camp-time-from" class="form-label">من</label>
+                                    <input type="time" class="form-control" id="camp-time-from" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="camp-time-to" class="form-label">إلى</label>
+                                    <input type="time" class="form-control" id="camp-time-to" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="camp-interval" class="form-label">الفاصل الزمني (ثوانٍ)</label>
+                                <input type="range" class="form-range" id="camp-interval" min="10" max="300" value="60">
+                                <span id="camp-interval-value" class="ms-2">60</span> ثانية
+                            </div>
+                        </div>
+                        <button type="button" class="camp-btn camp-btn-primary" id="camp-launch">اطلاق الحملة</button>
+                    </div>
+                </div>
+                <div class="col-md-5 offset-md-1">
+                    <div class="camp-preview-container mt-5">
+                        <div class="camp-chat-header">
+                            <span id="camp-preview-contact">العميل</span>
+                        </div>
+                        <div class="camp-chat-body">
+                            <div id="camp-preview-message">
+                                <div class="camp-message-bubble">
+                                    <span></span>
+                                    <small>02:51 PM <i class="fas fa-check-double"></i></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب الحملات المنفذة -->
+        <div id="section-launched" style="display: none;">
+            <div class="table-responsive mt-4">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>اسم الحمــلة</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="launched-campaigns-table">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="Scripts/common.js"></script>
+    <script src="Scripts/campaigns.js"></script>
+    <script src="Scripts/dashboard_content.js"></script>
+    <script src="Scripts/dashboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('tab-launch').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('section-launch').style.display = 'block';
+            document.getElementById('section-launched').style.display = 'none';
+            document.getElementById('tab-launch').classList.add('active');
+            document.getElementById('tab-launched').classList.remove('active');
+        });
+
+        document.getElementById('tab-launched').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('section-launch').style.display = 'none';
+            document.getElementById('section-launched').style.display = 'block';
+            document.getElementById('tab-launch').classList.remove('active');
+            document.getElementById('tab-launched').classList.add('active');
+            loadLaunchedCampaigns();
+        });
+    </script>
+</body>
+</html>

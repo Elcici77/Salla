@@ -1,0 +1,138 @@
+:root {
+    --primary-color: #34C334;
+    --secondary-color: #2AA52A;
+    --success-color: #28a745;
+    --light-color: #f6f7f9;
+    --dark-color: #343a40;
+    --text-color: #333;
+    --border-color: #e0e0e0;
+}
+
+body {
+    background-color: var(--light-color);
+    font-family: 'Tajawal', sans-serif;
+    color: var(--text-color);
+}
+
+/* لضبط العنوان أسفل النافبار */
+.camp-page-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--dark-color);
+    text-align: center;
+    margin-top: 120px !important; 
+    margin-bottom: 30px;
+}
+
+/* الحاويتان */
+.blacklist-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+/* بطاقة إعدادات الإلغاء */
+.unsubscribe-settings-card {
+    flex: 0 0 360px;
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+}
+
+/* بطاقة الأرقام المحظورة */
+.blacklist-card {
+    flex: 1;
+    min-width: 300px;
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* العنوان داخل البطاقات */
+.card-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* الرقم داخل القائمة السوداء */
+.blacklist-number {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f8f8;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+/* أيقونة الحذف */
+.delete-icon {
+    color: red;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.delete-icon:hover {
+    color: darkred;
+}
+
+/* زر إضافة رقم */
+.btn-success {
+    background-color: var(--primary-color);
+    border-color: var(--secondary-color);
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* إدخالات النص */
+input.form-control,
+textarea.form-control {
+    border-radius: 10px;
+    border-color: var(--border-color);
+}
+
+/* زر حفظ الإعدادات */
+#save-unsubscribe-settings {
+    background-color: var(--primary-color);
+    border-color: var(--secondary-color);
+    font-weight: bold;
+    width: 100%;
+}
+
+
+
+/* المودال */
+.modal-content {
+    border-radius: 14px;
+    background-color: #ffffff;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+/* زر حفظ في المودال */
+#save-new-number {
+    background-color: var(--primary-color);
+    border-color: var(--secondary-color);
+    font-weight: bold;
+}

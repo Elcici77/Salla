@@ -1,6 +1,5 @@
 // دالة لتحديث حالة الاتصال
 async function updateWhatsAppStatus() {
-    console.log('Attempting to update WhatsApp status');
     const badge = document.querySelector('.sidebar-item[href="whatsapp-qr.html"] .badge');
     
     if (!badge) {
@@ -13,7 +12,6 @@ async function updateWhatsAppStatus() {
 
     try {
         const authToken = localStorage.getItem('authToken');
-        console.log('Auth token:', authToken ? 'Found' : 'Not found');
         if (!authToken) {
             throw new Error('لم يتم العثور على رمز المصادقة');
         }
@@ -22,7 +20,6 @@ async function updateWhatsAppStatus() {
             headers: { Authorization: `Bearer ${authToken}` },
             timeout: 5000
         });
-        console.log('Sidebar WhatsApp Status Response:', JSON.stringify(response.data, null, 2));
 
         if (response.data.success && response.data.connected && response.data.phone) {
             badge.innerHTML = '<i class="fa-solid fa-check-circle"></i>متصل';

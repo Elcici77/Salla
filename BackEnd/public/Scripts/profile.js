@@ -190,12 +190,10 @@ function setupRemoveAvatar() {
             });
 
             const textResponse = await response.text();
-            console.log('استجابة الخادم (إزالة الصورة، نص خام):', textResponse);
 
             let data;
             try {
                 data = JSON.parse(textResponse);
-                console.log('استجابة الخادم (إزالة الصورة، JSON):', data);
             } catch (jsonErr) {
                 console.error('فشل تحليل JSON:', jsonErr);
                 throw new Error('استجابة الخادم غير صالحة');
@@ -311,7 +309,6 @@ function setupFormSubmit() {
             });
 
             const textResponse = await response.text();
-            console.log('استجابة الخادم (تحديث البيانات):', textResponse);
 
             let data;
             try {

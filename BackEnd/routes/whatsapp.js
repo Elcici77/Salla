@@ -9,5 +9,7 @@ router.get("/check-status", authenticateToken, whatsappController.checkStatus);
 router.get("/get-current-status", authenticateToken, whatsappController.getCurrentStatus);
 router.post("/disconnect", authenticateToken, whatsappController.disconnect);
 router.post("/save-connection", authenticateToken, whatsappController.saveConnection);
+router.get('/groups', authenticateToken, whatsappController.getWhatsAppGroups);
+router.post('/import', authenticateToken, whatsappController.importWhatsAppContacts);
 
 module.exports = router;
